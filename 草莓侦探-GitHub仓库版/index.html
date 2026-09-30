@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="一场用 20 轮判断理解信号检测论的草莓侦探实验。">
+  <meta name="theme-color" content="#fffaf3">
+  <title>草莓侦探｜信号检测论互动实验</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%233f8f62' d='M8 7c3-5 7 0 8 2 1-2 5-7 8-2-1 3-4 4-8 4S9 10 8 7'/%3E%3Cpath fill='%23db3f4a' d='M6 10c0-5 20-5 20 0 0 9-7 17-10 19C13 27 6 19 6 10'/%3E%3Ccircle cx='12' cy='15' r='1' fill='%23ffe39a'/%3E%3Ccircle cx='20' cy='15' r='1' fill='%23ffe39a'/%3E%3Ccircle cx='16' cy='21' r='1' fill='%23ffe39a'/%3E%3C/svg%3E">
+  <style>
+:root {
+  --paper: #fffaf3;
+  --ink: #253026;
+  --muted: #667066;
+  --line: #dfd8cc;
+  --red: #d83c49;
+  --red-dark: #a51f35;
+  --green: #397a54;
+  --green-dark: #1f5c3a;
+  --yellow: #f2bd4d;
+  --cream: #f5eadc;
+  --white: #fffefb;
+  --shadow: 0 24px 70px rgba(70, 48, 37, .11);
+  --radius: 24px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(216, 60, 73, .08), transparent 28rem),
+    linear-gradient(180deg, #fffaf3 0%, #faf5ed 100%);
+  font-family: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  min-height: 100vh;
+}
+button, a { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible { outline: 3px solid rgba(216, 60, 73, .32); outline-offset: 4px; }
+.site-shell { min-height: 100vh; }
+.brand-bar {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1240px;
+  padding: 0 32px;
+  margin: 0 auto;
+  border-bottom: 1px solid rgba(80, 64, 45, .12);
+}
+.brand { display: inline-flex; gap: 10px; align-items: center; color: var(--ink); text-decoration: none; font-weight: 900; letter-spacing: .03em; }
+.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; background: var(--red); border-radius: 12px 12px 17px 17px; font-size: 20px; }
+.brand-note { color: var(--muted); font-size: .88rem; }
+main { max-width: 1240px; min-height: calc(100vh - 76px); margin: 0 auto; padding: 0 32px 48px; }
+.screen { display: none; }
+.screen.is-active { display: block; animation: screen-in .45s ease both; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(10px); } }
+
+.intro-screen.is-active { min-height: calc(100vh - 110px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(460px, .94fr); align-items: center; gap: clamp(50px, 7vw, 100px); padding: 62px 0 70px; }
+.eyebrow { margin: 0 0 22px; color: var(--green-dark); text-transform: uppercase; letter-spacing: .14em; font-size: .78rem; font-weight: 900; }
+.eyebrow > span { display: inline-block; width: 30px; height: 2px; background: currentColor; vertical-align: middle; margin-right: 9px; }
+h1, h2 { margin: 0; font-family: Georgia, "Songti SC", "STSong", serif; font-weight: 700; letter-spacing: -.045em; line-height: .98; }
+h1 { font-size: clamp(4.2rem, 7.4vw, 7.3rem); }
+h2 { font-size: clamp(3.2rem, 6vw, 5.4rem); }
+h1 em, h2 em { color: var(--red); font-style: normal; }
+.lede { max-width: 640px; margin: 30px 0 32px; color: #525b52; font-size: 1.12rem; line-height: 1.85; }
+.rule-list { display: grid; gap: 13px; max-width: 620px; margin-bottom: 22px; }
+.rule-list > div { display: grid; grid-template-columns: 46px 1fr; align-items: start; gap: 15px; padding-top: 13px; border-top: 1px solid var(--line); color: #505950; line-height: 1.6; font-size: .94rem; }
+.rule-list strong { color: var(--red); font: 700 .82rem/1.5 Georgia, serif; }
+.experiment-setup, .difficulty-control { max-width: 620px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 254, 251, .76); }
+.experiment-setup { padding: 18px; }
+.experiment-setup__heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.experiment-setup__heading h2 { font: 800 1rem/1.3 Inter, "Noto Sans SC", sans-serif; letter-spacing: 0; }
+.experiment-setup__heading span { padding: 5px 9px; border-radius: 99px; color: var(--green-dark); background: #e4f0e7; font-size: .7rem; font-weight: 850; white-space: nowrap; }
+.prior-copy { margin: 11px 0 13px; color: #566057; font-size: .78rem; line-height: 1.65; }
+.prior-copy strong { color: var(--ink); }
+.trial-definitions, .outcome-guide { display: grid; gap: 7px; }
+.trial-definitions { grid-template-columns: 1fr 1fr; margin-bottom: 8px; }
+.outcome-guide { grid-template-columns: 1fr 1fr; }
+.trial-definitions p, .outcome-guide p { margin: 0; padding: 10px; border-radius: 11px; background: #f7f1e9; }
+.trial-definitions b, .outcome-guide b { display: block; color: var(--ink); font-size: .72rem; }
+.trial-definitions span, .outcome-guide span { display: block; margin-top: 3px; color: var(--muted); font-size: .68rem; line-height: 1.45; }
+.difficulty-control { margin: 12px 0 18px; padding: 17px 18px 15px; }
+.difficulty-control__title { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.difficulty-control__title label { font-size: .84rem; font-weight: 900; }
+.difficulty-control__title output { min-width: 58px; padding: 5px 10px; border-radius: 99px; color: white; background: var(--ink); text-align: center; font: 700 .9rem Georgia, serif; }
+.difficulty-control input[type="range"] { width: 100%; margin: 18px 0 8px; accent-color: var(--red); cursor: pointer; }
+.difficulty-control input[type="range"]:focus-visible { outline: 3px solid rgba(216, 60, 73, .24); outline-offset: 6px; border-radius: 10px; }
+.difficulty-scale { display: flex; justify-content: space-between; gap: 14px; color: var(--muted); font-size: .67rem; }
+.difficulty-scale span:last-child { text-align: right; }
+.difficulty-scale b { color: var(--ink); }
+.difficulty-explanation { margin: 10px 0 0; color: var(--green-dark); font-size: .75rem; font-weight: 800; line-height: 1.5; }
+.difficulty-note { margin: 6px 0 0; color: #817e77; font-size: .67rem; line-height: 1.55; }
+.primary-button { min-height: 56px; padding: 0 25px; border: 0; border-radius: 999px; color: white; background: var(--ink); font-weight: 850; cursor: pointer; box-shadow: 0 10px 24px rgba(37, 48, 38, .18); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+.primary-button span { margin-left: 16px; font-size: 1.2em; }
+.primary-button:hover { transform: translateY(-2px); background: var(--red); box-shadow: 0 13px 28px rgba(216, 60, 73, .2); }
+.privacy-note { margin: 15px 0 0; color: #8c8a83; font-size: .78rem; }
+.intro-visual { position: relative; min-height: 590px; border-radius: 36px; background: #f0ded0; overflow: hidden; box-shadow: var(--shadow); }
+.intro-visual::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 55% 45%, rgba(255,255,255,.75), transparent 56%); }
+.visual-caption { position: absolute; z-index: 2; left: 34px; top: 28px; display: flex; flex-direction: column; }
+.visual-caption span { font-weight: 900; }
+.visual-caption small { color: #756c63; margin-top: 4px; }
+
+.plate { position: relative; width: min(100%, 650px); aspect-ratio: 1.18 / 1; margin: 0 auto; border-radius: 50%; background: #fffef9; border: 10px solid #eee6da; box-shadow: inset 0 0 0 2px #d9d0c3; display: grid; grid-template-columns: repeat(4, 1fr); place-items: center; gap: 5px; padding: 11% 13%; }
+.plate--hero { position: absolute; width: 88%; left: 6%; top: 17%; transform: rotate(-4deg); box-shadow: 0 32px 50px rgba(91, 62, 44, .16), inset 0 0 0 2px #d9d0c3; }
+.strawberry { position: relative; width: min(82px, 100%); aspect-ratio: .82; filter: drop-shadow(0 5px 3px rgba(81, 34, 27, .10)); }
+.strawberry svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.experiment-screen.is-active { padding: 42px 0 70px; }
+.experiment-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+.experiment-header h2 { font-size: clamp(2.3rem, 5vw, 4rem); }
+.experiment-header .eyebrow { margin-bottom: 12px; }
+.phase-pill { padding: 9px 15px; border-radius: 99px; background: #e0efe5; color: var(--green-dark); font-size: .8rem; font-weight: 900; }
+.observe-panel { max-width: 840px; margin: 0 auto; }
+.observation-status { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0 0 20px; color: var(--green-dark); font-weight: 850; }
+.observation-status span { margin-right: 4px; }
+.observation-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--red); animation: observe-pulse 1.2s ease-in-out infinite; }
+.observation-status i:nth-child(3) { animation-delay: .16s; }
+.observation-status i:nth-child(4) { animation-delay: .32s; }
+@keyframes observe-pulse { 0%, 60%, 100% { opacity: .25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+.plate-wrap { background: #efded0; padding: clamp(20px, 5vw, 46px); border-radius: 32px; box-shadow: var(--shadow); }
+.stage-hint { margin: 18px 0 0; text-align: center; color: var(--muted); font-size: .85rem; }
+.answer-panel { max-width: 760px; margin: 60px auto 0; text-align: center; }
+.hidden-plate { width: 190px; height: 150px; margin: 0 auto 25px; display: grid; place-items: center; border: 2px dashed #c8bdb0; border-radius: 50%; background: rgba(255,255,255,.55); }
+.hidden-plate span { filter: grayscale(1); opacity: .32; font-size: 3.6rem; }
+.centered { text-align: center; }
+.answer-panel h3 { margin: 0; font: 700 clamp(2rem, 5vw, 3.5rem)/1.08 Georgia, "Songti SC", serif; }
+.answer-panel > p:not(.eyebrow) { color: var(--muted); }
+.answer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+.answer-button { min-height: 118px; padding: 22px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); cursor: pointer; display: flex; flex-direction: column; justify-content: center; transition: transform .2s, border-color .2s, box-shadow .2s; }
+.answer-button:hover { transform: translateY(-3px); border-color: var(--red); box-shadow: 0 16px 30px rgba(80,50,40,.09); }
+.answer-button:disabled { cursor: default; opacity: .46; transform: none; box-shadow: none; }
+.answer-button.is-selected { opacity: 1; border-color: var(--red); box-shadow: 0 12px 26px rgba(216,60,73,.12); }
+.answer-button span { font-size: 1.12rem; font-weight: 900; }
+.answer-button small { margin-top: 7px; color: var(--muted); }
+.answer-button--yes span { color: var(--red-dark); }
+.answer-button--no span { color: var(--green-dark); }
+.inline-feedback { margin-top: 20px; padding: 24px; border: 1px solid #ead8ce; border-radius: 20px; background: linear-gradient(135deg, #fff8ef, #fffdf9); animation: feedback-pop .3s ease both; }
+.feedback-badge { display: inline-flex; align-items: center; min-height: 34px; padding: 7px 13px; border-radius: 999px; color: white; background: var(--red); font-size: .82rem; font-weight: 900; }
+.inline-feedback[data-outcome="Hit"] .feedback-badge, .inline-feedback[data-outcome="Correct Rejection"] .feedback-badge { background: var(--green); }
+.inline-feedback p { margin: 12px 0 18px; color: var(--ink); font-weight: 760; font-size: 1rem; }
+.inline-feedback .primary-button { min-height: 48px; }
+@keyframes feedback-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+.results-screen.is-active { padding: 62px 0 80px; }
+.results-hero { display: grid; grid-template-columns: 1fr .8fr; align-items: end; gap: 80px; padding-bottom: 42px; border-bottom: 1px solid var(--line); }
+.results-hero .eyebrow { margin-bottom: 14px; }
+.results-summary { margin: 0; color: #535d53; font-size: 1.02rem; line-height: 1.8; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 26px 0; }
+.metric-card { min-height: 174px; padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255, 254, 251, .75); display: flex; flex-direction: column; }
+.metric-card span { color: var(--muted); font-size: .82rem; font-weight: 800; }
+.metric-card strong { margin: auto 0 8px; font: 700 2.65rem/1 Georgia, serif; color: var(--green-dark); }
+.metric-card small { color: #8a8881; font-size: .74rem; }
+.metric-card--accent { border-color: transparent; background: var(--red); color: white; }
+.metric-card--accent span, .metric-card--accent strong, .metric-card--accent small { color: white; }
+.results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.result-panel { border: 1px solid var(--line); background: var(--white); border-radius: var(--radius); padding: 26px; }
+.matrix-panel { grid-column: 1 / -1; }
+.interpretation-panel { grid-column: 1 / -1; }
+.panel-heading { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; }
+.panel-heading > div { display: flex; align-items: center; gap: 12px; }
+.panel-heading h3 { margin: 0; font-size: 1.12rem; }
+.panel-heading p { color: var(--muted); margin: 0; font-size: .75rem; }
+.panel-number { color: var(--red); font: 700 .8rem Georgia, serif; }
+.matrix { display: grid; grid-template-columns: 150px 1fr 1fr; gap: 7px; }
+.matrix-corner, .matrix-axis { display: grid; place-items: center; min-height: 48px; color: var(--muted); font-size: .75rem; text-align: center; }
+.matrix-axis { color: var(--ink); font-weight: 850; }
+.matrix-cell { min-height: 150px; padding: 20px; border-radius: 15px; display: flex; flex-direction: column; }
+.matrix-cell span { font-weight: 850; font-size: .86rem; }
+.matrix-cell strong { margin: auto 0 2px; font: 700 2.8rem/1 Georgia, serif; }
+.matrix-cell small { opacity: .7; font-size: .72rem; }
+.hit { background: #dfeee5; color: #245b3d; }
+.miss { background: #f6e7d2; color: #865c23; }
+.false-alarm { background: #f4dde0; color: #8a2f3a; }
+.correct-rejection { background: #e3ecf2; color: #34596b; }
+.rate-strip { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 18px; color: var(--muted); font-size: .78rem; }
+.rate-strip b { color: var(--ink); margin-left: 6px; }
+.sdt-chart { height: 285px; width: 100%; }
+.sdt-chart svg { width: 100%; height: 100%; overflow: visible; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: .72rem; }
+.chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.chart-legend i { width: 17px; height: 3px; border-radius: 3px; }
+.legend-noise { background: var(--green); }.legend-signal { background: var(--red); }.legend-criterion { background: var(--yellow); }
+.chart-caption { color: var(--muted); font-size: .82rem; line-height: 1.65; }
+.interpretation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.interpretation-block { padding: 18px; border-radius: 16px; background: #f8f3eb; }
+.interpretation-block span { color: var(--red); font: 700 .75rem Georgia, serif; }
+.interpretation-block h4 { margin: 8px 0; font-size: 1rem; }
+.interpretation-block p { margin: 0; color: var(--muted); font-size: .84rem; line-height: 1.7; }
+.model-note { display: grid; grid-template-columns: 100px 1fr; gap: 24px; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.model-note strong { color: var(--red-dark); }
+.model-note p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.7; }
+.concept-lab { margin-top: 30px; padding: clamp(22px, 4vw, 38px); border: 1px solid var(--line); border-radius: 30px; background: linear-gradient(145deg, rgba(255,254,251,.96), rgba(250,241,230,.86)); box-shadow: 0 20px 50px rgba(70, 48, 37, .07); }
+.concept-lab__heading { display: grid; grid-template-columns: .7fr 1.3fr; align-items: end; gap: 40px; }
+.concept-lab__heading > div { display: flex; align-items: center; gap: 12px; }
+.concept-lab__heading h3 { margin: 0; font: 700 clamp(1.8rem, 3.4vw, 2.7rem)/1 Georgia, "Songti SC", serif; }
+.concept-lab__heading p { max-width: 650px; margin: 0; color: #505950; line-height: 1.75; }
+.concept-lab__note { margin: 18px 0 0; padding: 12px 15px; border-left: 3px solid var(--yellow); border-radius: 0 10px 10px 0; color: var(--muted); background: rgba(255, 245, 215, .58); font-size: .82rem; line-height: 1.65; }
+.lab-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+.lab-control { min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: var(--white); }
+.lab-control__title { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.lab-control__title label { font-weight: 900; }
+.lab-control__title output { min-width: 66px; padding: 6px 11px; border-radius: 99px; background: var(--ink); color: white; text-align: center; font: 700 1rem Georgia, serif; }
+.lab-control input[type="range"] { width: 100%; margin: 24px 0 10px; accent-color: var(--red); cursor: pointer; }
+.lab-control input[type="range"]:focus-visible { outline: 3px solid rgba(216, 60, 73, .24); outline-offset: 6px; border-radius: 10px; }
+.lab-scale { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .72rem; }
+.lab-bias-scale { display: grid; grid-template-columns: 1fr auto 1fr; gap: 13px; color: var(--muted); font-size: .68rem; line-height: 1.45; }
+.lab-bias-scale span:nth-child(2) { text-align: center; }
+.lab-bias-scale span:last-child { text-align: right; }
+.lab-bias-scale b { color: var(--ink); }
+.lab-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 22px; }
+.lab-actions > span { margin-right: 4px; color: var(--muted); font-size: .76rem; font-weight: 800; }
+.lab-actions button, .lab-mode-toggle button { min-height: 38px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 99px; color: var(--ink); background: rgba(255,255,255,.8); font-size: .76rem; font-weight: 800; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
+.lab-actions button:hover, .lab-mode-toggle button:hover { transform: translateY(-1px); border-color: var(--red); }
+.lab-actions .lab-reset { margin-left: auto; color: var(--red-dark); border-color: rgba(216,60,73,.3); background: #fff8f8; }
+.lab-metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.lab-metric-card { min-height: 148px; padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,254,251,.78); display: flex; flex-direction: column; }
+.lab-metric-card span { min-height: 2.6em; color: var(--muted); font-size: .76rem; font-weight: 850; line-height: 1.35; }
+.lab-metric-card strong { margin: auto 0 7px; color: var(--green-dark); font: 700 2.25rem/1 Georgia, serif; }
+.lab-metric-card small { color: #85877f; font-size: .7rem; }
+.lab-metric-card--hit { background: #dfeee5; color: #245b3d; border-color: transparent; }
+.lab-metric-card--fa { background: #f4dde0; color: #8a2f3a; border-color: transparent; }
+.lab-metric-card--miss { background: #f6e7d2; color: #865c23; border-color: transparent; }
+.lab-metric-card--cr { background: #e3ecf2; color: #34596b; border-color: transparent; }
+.lab-metric-card--hit span, .lab-metric-card--hit strong, .lab-metric-card--fa span, .lab-metric-card--fa strong, .lab-metric-card--miss span, .lab-metric-card--miss strong, .lab-metric-card--cr span, .lab-metric-card--cr strong { color: inherit; }
+.lab-metric-card--criterion { background: #fff3cf; border-color: transparent; }
+.lab-metric-card--criterion strong { color: #8a6519; }
+.lab-beta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin: 14px 0 24px; padding: 0 4px; color: var(--muted); font-size: .76rem; }
+.lab-beta span { color: var(--ink); font-weight: 800; }
+.lab-beta p { margin: 0; }
+.lab-chart-panel { padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--white); overflow: hidden; }
+.lab-chart-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.lab-chart-heading h4 { margin: 0; font-size: 1rem; }
+.lab-chart-heading p { margin: 6px 0 0; color: var(--muted); font-size: .72rem; }
+.lab-mode-toggle { display: flex; gap: 6px; padding: 4px; border-radius: 99px; background: #f3eee6; }
+.lab-mode-toggle button { border: 0; background: transparent; }
+.lab-mode-toggle button[aria-pressed="true"] { color: white; background: var(--ink); }
+.lab-chart { width: 100%; height: 410px; margin-top: 10px; }
+.lab-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lab-chart-legend { margin-top: 4px; }
+.lab-chart-legend span:last-child i { opacity: .55; }
+.lab-explanation { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.lab-explanation > div { display: grid; grid-template-columns: 38px 1fr; align-items: start; gap: 12px; padding: 16px; border-radius: 15px; background: #f7f1e8; }
+.lab-explanation > div > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: white; background: var(--red); font: 700 .88rem Georgia, serif; }
+.lab-explanation p { margin: 0; color: #586158; font-size: .82rem; line-height: 1.65; }
+.lab-warning { grid-column: 1 / -1; padding: 13px 16px; border: 1px solid #efd39d; border-radius: 13px; color: #77541e !important; background: #fff4d7; font-weight: 750; }
+.lab-takeaway { display: grid; grid-template-columns: 160px 1fr; gap: 24px; margin-top: 16px; padding: 18px; border-radius: 16px; color: white; background: var(--ink); }
+.lab-takeaway strong { color: #ffd36f; }
+.lab-takeaway p { margin: 0; color: #e1e6e1; font-size: .82rem; line-height: 1.7; }
+.results-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding: 25px 30px; border-radius: 22px; background: var(--ink); color: white; }
+.results-footer > div { display: flex; flex-direction: column; gap: 5px; }
+.results-footer span { color: #bfc7c0; font-size: .76rem; }
+.results-footer .primary-button { background: white; color: var(--ink); box-shadow: none; }
+.results-footer .primary-button:hover { color: white; background: var(--red); }
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+@media (max-width: 900px) {
+  .intro-screen.is-active { grid-template-columns: 1fr; padding-top: 44px; }
+  .intro-visual { min-height: 560px; }
+  .results-hero { grid-template-columns: 1fr; gap: 24px; }
+  .metric-grid { grid-template-columns: 1fr 1fr; }
+  .results-grid { grid-template-columns: 1fr; }
+  .matrix-panel, .interpretation-panel { grid-column: 1; }
+  .interpretation { grid-template-columns: 1fr; }
+  .concept-lab__heading { grid-template-columns: 1fr; gap: 14px; }
+  .lab-controls { grid-template-columns: 1fr; }
+  .lab-metric-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 620px) {
+  .brand-bar { height: 65px; padding: 0 18px; }
+  .brand-note { display: none; }
+  main { padding: 0 16px 36px; }
+  .intro-screen.is-active { min-height: auto; padding: 38px 0 50px; gap: 42px; }
+  h1 { font-size: clamp(3.6rem, 18vw, 5.2rem); }
+  .intro-visual { min-height: 410px; border-radius: 24px; }
+  .visual-caption { left: 20px; top: 18px; }
+  .visual-callout { right: 16px; bottom: 16px; }
+  .plate--hero { top: 18%; }
+  .experiment-setup__heading { align-items: flex-start; }
+  .trial-definitions, .outcome-guide { grid-template-columns: 1fr; }
+  .difficulty-scale { align-items: flex-start; }
+  .strawberry { width: min(58px, 100%); }
+  .experiment-screen.is-active, .results-screen.is-active { padding-top: 32px; }
+  .experiment-header { margin-bottom: 20px; }
+  .phase-pill { padding: 8px 12px; }
+  .plate-wrap, .feedback-visual { padding: 15px; border-radius: 22px; }
+  .plate { border-width: 6px; padding: 10% 12%; }
+  .answer-panel { margin-top: 38px; }
+  .answer-actions { grid-template-columns: 1fr; }
+  .metric-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .metric-card { min-height: 145px; padding: 17px; }
+  .metric-card strong { font-size: 2.15rem; }
+  .result-panel { padding: 18px; border-radius: 19px; }
+  .panel-heading { align-items: flex-start; }
+  .panel-heading p { display: none; }
+  .matrix { grid-template-columns: 62px 1fr 1fr; gap: 5px; }
+  .matrix-corner { font-size: .61rem; }
+  .matrix-cell { min-height: 130px; padding: 12px; }
+  .matrix-cell span { font-size: .72rem; }
+  .matrix-cell strong { font-size: 2.2rem; }
+  .matrix-cell small { display: none; }
+  .model-note { grid-template-columns: 1fr; gap: 8px; }
+  .concept-lab { margin-top: 18px; padding: 18px; border-radius: 21px; }
+  .concept-lab__heading h3 { font-size: 2rem; }
+  .lab-control { padding: 16px; }
+  .lab-bias-scale { grid-template-columns: 1fr; }
+  .lab-bias-scale span:nth-child(2), .lab-bias-scale span:last-child { text-align: left; }
+  .lab-actions { align-items: stretch; }
+  .lab-actions > span { width: 100%; }
+  .lab-actions button { flex: 1 1 calc(50% - 8px); }
+  .lab-actions .lab-reset { margin-left: 0; flex-basis: 100%; }
+  .lab-metric-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .lab-metric-card { min-height: 132px; padding: 14px; }
+  .lab-metric-card span { font-size: .68rem; }
+  .lab-metric-card strong { font-size: 1.85rem; }
+  .lab-chart-panel { padding: 14px 10px; }
+  .lab-chart-heading { flex-direction: column; }
+  .lab-mode-toggle { width: 100%; }
+  .lab-mode-toggle button { flex: 1; }
+  .lab-chart { height: 270px; }
+  .lab-explanation { grid-template-columns: 1fr; }
+  .lab-warning { grid-column: 1; }
+  .lab-takeaway { grid-template-columns: 1fr; gap: 7px; }
+  .results-footer { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="brand-bar" aria-label="网站标题">
+      <a class="brand" href="#" aria-label="草莓侦探首页">
+        <span class="brand-mark" aria-hidden="true">🍓</span>
+        <span>草莓侦探</span>
+      </a>
+      <span class="brand-note">信号检测论互动实验</span>
+    </header>
+
+    <main id="app" tabindex="-1">
+      <section id="intro-screen" class="screen intro-screen is-active" aria-labelledby="intro-title">
+        <div class="intro-copy">
+          <p class="eyebrow"><span></span> 20 轮 · 每轮观察 8 秒</p>
+          <h1 id="intro-title">你能发现<br><em>坏草莓</em>吗？</h1>
+          <p class="lede">颜色越深，越可能是坏草莓。看完整盘，再凭感觉作出判断。</p>
+          <div class="rule-list" aria-label="实验规则">
+            <div><strong>01</strong><span>每盘 12 颗，可能恰有 1 颗坏草莓，也可能全部正常</span></div>
+            <div><strong>02</strong><span>观察满 8 秒后，图片会隐藏，再作出判断</span></div>
+            <div><strong>03</strong><span>颜色越深，越可能是坏草莓</span></div>
+          </div>
+          <section class="experiment-setup" aria-labelledby="experiment-setup-title">
+            <div class="experiment-setup__heading">
+              <h2 id="experiment-setup-title">先看懂实验设定</h2>
+              <span>先验概率固定为 1∶1</span>
+            </div>
+            <p class="prior-copy">20 轮中有 10 轮是<strong>信号</strong>、10 轮是<strong>噪声</strong>，出现顺序随机，所以 P（信号）= 50%，P（噪声）= 50%。</p>
+            <div class="trial-definitions">
+              <p><b>信号 Signal</b><span>这盘恰有 1 颗坏草莓</span></p>
+              <p><b>噪声 Noise</b><span>这盘 12 颗草莓全部正常</span></p>
+            </div>
+            <div class="outcome-guide" aria-label="四种判断结果的实际含义">
+              <p><b>击中 Hit</b><span>有坏草莓，回答“有”</span></p>
+              <p><b>漏报 Miss</b><span>有坏草莓，回答“没有”</span></p>
+              <p><b>虚报 False Alarm</b><span>全都正常，回答“有”</span></p>
+              <p><b>正确拒绝 Correct Rejection</b><span>全都正常，回答“没有”</span></p>
+            </div>
+          </section>
+          <div class="difficulty-control">
+            <div class="difficulty-control__title">
+              <label for="experiment-dprime-slider">选择实验难度（目标 d′）</label>
+              <output id="experiment-dprime-value" for="experiment-dprime-slider">2.00</output>
+            </div>
+            <input id="experiment-dprime-slider" type="range" min="0.5" max="3" step="0.25" value="2" aria-describedby="difficulty-explanation difficulty-note">
+            <div class="difficulty-scale"><span><b>0.50</b> 难度高 · 更易重叠</span><span><b>3.00</b> 难度低 · 更易区分</span></div>
+            <p id="difficulty-explanation" class="difficulty-explanation" aria-live="polite"></p>
+            <p id="difficulty-note" class="difficulty-note">d′ 越大，两类颜色分布相隔越远，实验越容易。这里选择的是生成刺激时的目标 d′；结果页的 d′ 是根据你的回答估计，二者可能不同。</p>
+          </div>
+          <button id="start-button" class="primary-button" type="button">
+            开始实验 <span aria-hidden="true">→</span>
+          </button>
+          <p class="privacy-note">实验记录只保存在当前页面，刷新后即清除。</p>
+        </div>
+        <div class="intro-visual" aria-label="一盘颜色深浅不同的草莓示意图">
+          <div class="visual-caption"><span>示意盘</span><small>这一盘有坏草莓吗？</small></div>
+          <div class="plate plate--hero" id="demo-plate"></div>
+        </div>
+      </section>
+
+      <section id="experiment-screen" class="screen experiment-screen" aria-labelledby="experiment-heading">
+        <div class="experiment-header">
+          <div>
+            <p class="eyebrow"><span></span> 正式实验</p>
+            <h2 id="experiment-heading">第 <b id="round-number">1</b> / 20 轮</h2>
+          </div>
+          <div id="phase-pill" class="phase-pill">观察中</div>
+        </div>
+
+        <div id="observe-panel" class="observe-panel">
+          <div class="observation-status"><span>请仔细观察这盘草莓</span><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i></div>
+          <div class="plate-wrap">
+            <div id="trial-plate" class="plate" aria-label="本轮的一盘十二颗草莓"></div>
+          </div>
+          <p class="stage-hint">看完整盘的颜色分布，稍后会自动进入判断。</p>
+        </div>
+
+        <div id="answer-panel" class="answer-panel" hidden>
+          <div class="hidden-plate" aria-hidden="true"><span>🍓</span></div>
+          <p class="eyebrow centered"><span></span> 凭刚才的印象回答</p>
+          <h3>这一盘有坏草莓吗？</h3>
+          <p>图片已经隐藏，选一个你更相信的答案。</p>
+          <div class="answer-actions">
+            <button class="answer-button answer-button--yes" data-answer="true" type="button"><span>有坏草莓</span><small>我发现了可疑信号</small></button>
+            <button class="answer-button answer-button--no" data-answer="false" type="button"><span>没有坏草莓</span><small>我认为全都正常</small></button>
+          </div>
+          <div id="inline-feedback" class="inline-feedback" hidden aria-live="polite">
+            <div class="feedback-badge" id="outcome-title">击中 Hit</div>
+            <p id="outcome-message"></p>
+            <button id="next-button" class="primary-button" type="button">下一轮 <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+      </section>
+
+      <section id="results-screen" class="screen results-screen" aria-label="实验结果">
+        <div class="results-hero">
+          <div>
+            <p class="eyebrow"><span></span> 实验完成</p>
+          </div>
+          <p id="results-summary" class="results-summary"></p>
+        </div>
+
+        <div class="metric-grid" aria-label="核心指标">
+          <article class="metric-card"><span>总体正确率</span><strong id="metric-accuracy">—</strong><small>正确判断占 20 轮的比例</small></article>
+          <article class="metric-card"><span>击中率</span><strong id="metric-hit-rate">—</strong><small>有坏草莓时成功发现</small></article>
+          <article class="metric-card"><span>虚报率</span><strong id="metric-fa-rate">—</strong><small>全正常时误报“有”</small></article>
+          <article class="metric-card metric-card--accent"><span>敏感性 d′</span><strong id="metric-dprime">—</strong><small>区分信号与噪声的估计</small></article>
+        </div>
+
+        <div class="results-grid">
+          <article class="result-panel matrix-panel">
+            <div class="panel-heading"><div><span class="panel-number">01</span><h3>四种判断结果</h3></div><p>真实情况 × 你的回答</p></div>
+            <div class="matrix" role="table" aria-label="混淆矩阵">
+              <div class="matrix-corner" role="columnheader">真实情况 ↓<br>你的判断 →</div>
+              <div class="matrix-axis" role="columnheader">有坏草莓</div>
+              <div class="matrix-axis" role="columnheader">没有坏草莓</div>
+              <div class="matrix-axis matrix-axis--row" role="rowheader">实际有</div>
+              <div class="matrix-cell hit"><span>击中 Hit</span><strong id="count-hit">0</strong><small>发现了真实信号</small></div>
+              <div class="matrix-cell miss"><span>漏报 Miss</span><strong id="count-miss">0</strong><small>错过了真实信号</small></div>
+              <div class="matrix-axis matrix-axis--row" role="rowheader">实际无</div>
+              <div class="matrix-cell false-alarm"><span>虚报 False Alarm</span><strong id="count-fa">0</strong><small>把噪声当成信号</small></div>
+              <div class="matrix-cell correct-rejection"><span>正确拒绝 Correct Rejection</span><strong id="count-cr">0</strong><small>正确排除了噪声</small></div>
+            </div>
+            <div class="rate-strip">
+              <span>漏报率 <b id="metric-miss-rate">—</b></span>
+              <span>正确拒绝率 <b id="metric-cr-rate">—</b></span>
+              <span>判断标准 c <b id="metric-c">—</b></span>
+            </div>
+          </article>
+
+          <article class="result-panel chart-panel">
+            <div class="panel-heading"><div><span class="panel-number">02</span><h3>为什么会判断错？</h3></div><p>信号检测论示意模型</p></div>
+            <div id="sdt-chart" class="sdt-chart" aria-label="两条重叠的信号检测论钟形曲线"></div>
+            <div class="chart-legend"><span><i class="legend-noise"></i>只有正常草莓</span><span><i class="legend-signal"></i>存在坏草莓</span><span><i class="legend-criterion"></i>你的判断标准</span></div>
+            <p class="chart-caption">两条曲线重叠，意味着“可疑感”并不等于真实变质。标准向左时更容易报告“有”，击中与虚报通常都会增加；向右时则相反。</p>
+          </article>
+
+          <article class="result-panel interpretation-panel">
+            <div class="panel-heading"><div><span class="panel-number">03</span><h3>读懂你的结果</h3></div><p>基于本次 20 轮实验</p></div>
+            <div id="interpretation" class="interpretation"></div>
+            <div class="model-note"><strong>请留意</strong><p>d′ 与 c 使用有限样本校正，并基于经典等方差信号检测模型。它们是本次实验的估计，不代表永久不变的视觉能力或人格特征；c 也不是实际的草莓颜色阈值。</p></div>
+          </article>
+        </div>
+
+        <section class="concept-lab" aria-labelledby="concept-lab-title">
+          <div class="concept-lab__heading">
+            <div>
+              <span class="panel-number">04</span>
+              <h3 id="concept-lab-title">概念实验室</h3>
+            </div>
+            <p>自由调整敏感性 d′ 和判断标准 c，看看分布、击中率与虚报率会怎样变化。</p>
+          </div>
+          <p class="concept-lab__note">这是经典等方差信号检测模型的理论演示，不是对刚才草莓颜色的重新分析。</p>
+
+          <div class="lab-controls">
+            <div class="lab-control">
+              <div class="lab-control__title">
+                <label for="dprime-slider">敏感性 d′</label>
+                <output id="dprime-value" for="dprime-slider">1.50</output>
+              </div>
+              <input id="dprime-slider" type="range" min="0" max="4" step="0.05" value="1.5">
+              <div class="lab-scale"><span>0 · 完全重叠</span><span>4 · 容易区分</span></div>
+            </div>
+            <div class="lab-control">
+              <div class="lab-control__title">
+                <label for="criterion-slider">判断标准 c</label>
+                <output id="criterion-value" for="criterion-slider">0.00</output>
+              </div>
+              <input id="criterion-slider" type="range" min="-2" max="2" step="0.05" value="0">
+              <div class="lab-bias-scale"><span><b>c &lt; 0</b> 宽松，更容易回答“有坏草莓”</span><span><b>c = 0</b> 居中</span><span><b>c &gt; 0</b> 保守，只有较确定时才回答“有坏草莓”</span></div>
+            </div>
+          </div>
+
+          <div class="lab-actions" aria-label="典型情境">
+            <span>试试典型情境</span>
+            <button type="button" data-lab-preset="overlap">高度重叠</button>
+            <button type="button" data-lab-preset="easy">容易区分</button>
+            <button type="button" data-lab-preset="liberal">宽松判断</button>
+            <button type="button" data-lab-preset="conservative">保守判断</button>
+            <button id="lab-reset" class="lab-reset" type="button">恢复默认值</button>
+          </div>
+
+          <div class="lab-metric-grid" aria-label="理论模型指标">
+            <article class="lab-metric-card lab-metric-card--hit"><span>击中率 Hit Rate</span><strong id="lab-hit-rate">—</strong><small>有信号时回答“有”</small></article>
+            <article class="lab-metric-card lab-metric-card--fa"><span>虚报率 False Alarm Rate</span><strong id="lab-fa-rate">—</strong><small>无信号时回答“有”</small></article>
+            <article class="lab-metric-card lab-metric-card--miss"><span>漏报率 Miss Rate</span><strong id="lab-miss-rate">—</strong><small>有信号时回答“没有”</small></article>
+            <article class="lab-metric-card lab-metric-card--cr"><span>正确拒绝率 Correct Rejection Rate</span><strong id="lab-cr-rate">—</strong><small>无信号时回答“没有”</small></article>
+            <article class="lab-metric-card"><span>理论正确率 Accuracy</span><strong id="lab-accuracy">—</strong><small>假设有、无信号各占一半</small></article>
+            <article class="lab-metric-card lab-metric-card--criterion"><span>判断标准位置 criterion</span><strong id="lab-criterion">—</strong><small>criterion = c + d′ / 2</small></article>
+          </div>
+
+          <div class="lab-beta"><span>β = <strong id="lab-beta">—</strong></span><p>β 是经典等方差模型中的判断标准表达方式。</p></div>
+
+          <article class="lab-chart-panel">
+            <div class="lab-chart-heading">
+              <div><h4>经典等方差信号检测模型示意图</h4><p>噪声 N(0, 1) · 信号 N(d′, 1)</p></div>
+              <div class="lab-mode-toggle" aria-label="选择重点显示的概率区域">
+                <button type="button" data-lab-mode="signal" aria-pressed="true">显示信号结果</button>
+                <button type="button" data-lab-mode="noise" aria-pressed="false">显示噪声结果</button>
+              </div>
+            </div>
+            <div id="lab-chart" class="lab-chart" aria-live="polite"></div>
+            <div class="chart-legend lab-chart-legend">
+              <span><i class="legend-noise"></i>只有正常草莓（噪声）</span>
+              <span><i class="legend-signal"></i>存在坏草莓（信号）</span>
+              <span><i class="legend-criterion"></i>判断标准 criterion</span>
+              <span id="lab-area-legend"></span>
+            </div>
+            <p class="chart-caption">图中分布是理论模型，不代表本实验草莓颜色数据的精确分布。</p>
+          </article>
+
+          <div class="lab-explanation" aria-live="polite">
+            <div><span>d′</span><p id="lab-dprime-insight"></p></div>
+            <div><span>c</span><p id="lab-c-insight"></p></div>
+            <p id="lab-warning" class="lab-warning" hidden></p>
+          </div>
+          <div class="lab-takeaway"><strong>记住这组关系</strong><p>d′ 表示区分能力，c 表示回答倾向。c 不变时，d′ 越大，击中率通常上升、虚报率下降；c 向左移动时击中和虚报通常一起上升，向右移动时则一起下降。</p></div>
+        </section>
+
+        <div class="results-footer">
+          <div><span>实验耗时</span><strong id="elapsed-time">—</strong></div>
+          <button id="restart-button" class="primary-button" type="button">再玩一次 <span aria-hidden="true">↻</span></button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="live-region" class="sr-only" aria-live="polite"></div>
+  <script>
+const TOTAL_ROUNDS = 20;
+const SIGNAL_ROUNDS = 10;
+const OBSERVATION_MS = 8_000;
+const EXPERIMENT_DPRIME_MIN = 0.5;
+const EXPERIMENT_DPRIME_MAX = 3;
+const DEFAULT_EXPERIMENT_DPRIME = 2;
+const NORMAL_STRAWBERRY_MEAN = 0.42;
+const STIMULUS_SD = 0.12;
+
+const DARKEST_PROBABILITY_POINTS = [
+  [0.5, 0.30],
+  [1.5, 0.65],
+  [2.5, 0.93],
+  [3.0, 0.97],
+];
+
+function clamp(value, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalRandom(mean, sd, random = Math.random) {
+  let u = 0;
+  let v = 0;
+  while (u === 0) u = random();
+  while (v === 0) v = random();
+  const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  return clamp(mean + sd * z);
+}
+
+function shuffle(items, random = Math.random) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function signalStrawberryMean(targetDPrime = DEFAULT_EXPERIMENT_DPRIME) {
+  if (!Number.isFinite(targetDPrime)) throw new TypeError("targetDPrime must be a finite number");
+  const safeDPrime = clamp(targetDPrime, EXPERIMENT_DPRIME_MIN, EXPERIMENT_DPRIME_MAX);
+  return NORMAL_STRAWBERRY_MEAN + safeDPrime * STIMULUS_SD;
+}
+
+function targetBadIsDarkestProbability(targetDPrime = DEFAULT_EXPERIMENT_DPRIME) {
+  if (!Number.isFinite(targetDPrime)) throw new TypeError("targetDPrime must be a finite number");
+  const safeDPrime = clamp(targetDPrime, EXPERIMENT_DPRIME_MIN, EXPERIMENT_DPRIME_MAX);
+  for (let index = 1; index < DARKEST_PROBABILITY_POINTS.length; index += 1) {
+    const [rightDPrime, rightProbability] = DARKEST_PROBABILITY_POINTS[index];
+    const [leftDPrime, leftProbability] = DARKEST_PROBABILITY_POINTS[index - 1];
+    if (safeDPrime <= rightDPrime) {
+      const progress = (safeDPrime - leftDPrime) / (rightDPrime - leftDPrime);
+      return leftProbability + progress * (rightProbability - leftProbability);
+    }
+  }
+  return DARKEST_PROBABILITY_POINTS.at(-1)[1];
+}
+
+function generateExperiment(random = Math.random, targetDPrime = DEFAULT_EXPERIMENT_DPRIME) {
+  const safeDPrime = clamp(targetDPrime, EXPERIMENT_DPRIME_MIN, EXPERIMENT_DPRIME_MAX);
+  const signalMean = signalStrawberryMean(safeDPrime);
+  const darkestProbability = targetBadIsDarkestProbability(safeDPrime);
+  const darkestMargin = 0.025 + ((safeDPrime - EXPERIMENT_DPRIME_MIN) / (EXPERIMENT_DPRIME_MAX - EXPERIMENT_DPRIME_MIN)) * 0.095;
+  const schedule = shuffle([
+    ...Array(SIGNAL_ROUNDS).fill(true),
+    ...Array(TOTAL_ROUNDS - SIGNAL_ROUNDS).fill(false),
+  ], random);
+
+  return schedule.map((signalPresent, index) => {
+    const badIndex = signalPresent ? Math.floor(random() * 12) : null;
+    const strawberries = Array.from({ length: 12 }, () => normalRandom(NORMAL_STRAWBERRY_MEAN, STIMULUS_SD, random));
+    if (signalPresent) {
+      const maxNormalDepth = Math.max(...strawberries.filter((_, strawberryIndex) => strawberryIndex !== badIndex));
+      const sampledBadDepth = normalRandom(signalMean, STIMULUS_SD, random);
+      const shouldBeDarkest = random() < darkestProbability;
+      strawberries[badIndex] = shouldBeDarkest
+        ? clamp(Math.max(sampledBadDepth, maxNormalDepth + darkestMargin))
+        : clamp(Math.min(sampledBadDepth, maxNormalDepth - 0.012));
+    }
+    return {
+      round: index + 1,
+      signalPresent,
+      targetDPrime: safeDPrime,
+      strawberries,
+      badIndex,
+      userResponse: null,
+      outcome: null,
+    };
+  });
+}
+
+function classifyOutcome(signalPresent, userResponse) {
+  if (signalPresent && userResponse) return "Hit";
+  if (signalPresent && !userResponse) return "Miss";
+  if (!signalPresent && userResponse) return "False Alarm";
+  return "Correct Rejection";
+}
+
+function inverseNormalCDF(p) {
+  if (p <= 0 || p >= 1) throw new RangeError("p must be between 0 and 1");
+  const a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
+  const b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
+  const c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
+  const d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
+  const low = 0.02425;
+  const high = 1 - low;
+  if (p < low) {
+    const q = Math.sqrt(-2 * Math.log(p));
+    return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+      ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+  }
+  if (p > high) {
+    const q = Math.sqrt(-2 * Math.log(1 - p));
+    return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+      ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+  }
+  const q = p - 0.5;
+  const r = q * q;
+  return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+    (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+}
+
+function normalCDF(x) {
+  if (!Number.isFinite(x)) return x === Infinity ? 1 : x === -Infinity ? 0 : NaN;
+  const sign = x < 0 ? -1 : 1;
+  const z = Math.abs(x) / Math.sqrt(2);
+  const t = 1 / (1 + 0.3275911 * z);
+  const coefficients = [0.254829592, -0.284496736, 1.421413741, -1.453152027, 1.061405429];
+  const polynomial = (((((coefficients[4] * t + coefficients[3]) * t) + coefficients[2]) * t + coefficients[1]) * t + coefficients[0]) * t;
+  const erf = sign * (1 - polynomial * Math.exp(-(z ** 2)));
+  return clamp(0.5 * (1 + erf));
+}
+
+function calculateLabMetrics(dPrime, c) {
+  if (!Number.isFinite(dPrime) || !Number.isFinite(c)) throw new TypeError("dPrime and c must be finite numbers");
+  const criterion = c + dPrime / 2;
+  const hitRate = normalCDF(dPrime / 2 - c);
+  const falseAlarmRate = normalCDF(-dPrime / 2 - c);
+  const missRate = 1 - hitRate;
+  const correctRejectionRate = 1 - falseAlarmRate;
+  return {
+    dPrime,
+    c,
+    criterion,
+    hitRate,
+    falseAlarmRate,
+    missRate,
+    correctRejectionRate,
+    accuracy: 0.5 * (hitRate + correctRejectionRate),
+    beta: Math.exp(dPrime * c),
+  };
+}
+
+function calculateMetrics(records) {
+  const H = records.filter((r) => r.outcome === "Hit").length;
+  const M = records.filter((r) => r.outcome === "Miss").length;
+  const FA = records.filter((r) => r.outcome === "False Alarm").length;
+  const CR = records.filter((r) => r.outcome === "Correct Rejection").length;
+  const signalTotal = H + M;
+  const noiseTotal = FA + CR;
+  const accuracy = (H + CR) / records.length;
+  const hitRate = H / signalTotal;
+  const missRate = M / signalTotal;
+  const falseAlarmRate = FA / noiseTotal;
+  const correctRejectionRate = CR / noiseTotal;
+  const correctedHR = (H + 0.5) / (signalTotal + 1);
+  const correctedFAR = (FA + 0.5) / (noiseTotal + 1);
+  const zHR = inverseNormalCDF(correctedHR);
+  const zFAR = inverseNormalCDF(correctedFAR);
+  return {
+    H, M, FA, CR,
+    accuracy, hitRate, missRate, falseAlarmRate, correctRejectionRate,
+    correctedHR, correctedFAR,
+    dPrime: zHR - zFAR,
+    c: -0.5 * (zHR + zFAR),
+  };
+}
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
+const state = {
+  phase: "intro",
+  trials: [],
+  currentIndex: 0,
+  experimentStartedAt: null,
+  experimentEndedAt: null,
+  remainingMs: OBSERVATION_MS,
+  lastTickAt: null,
+  timerId: null,
+  responseLocked: false,
+  targetDPrime: DEFAULT_EXPERIMENT_DPRIME,
+};
+
+const labState = { dPrime: 1.5, c: 0, mode: "signal" };
+const labPresets = {
+  overlap: { dPrime: 0.4, c: 0 },
+  easy: { dPrime: 2.5, c: 0 },
+  liberal: { dPrime: 1.5, c: -0.8 },
+  conservative: { dPrime: 1.5, c: 0.8 },
+};
+
+const screens = {
+  intro: $("#intro-screen"),
+  experiment: $("#experiment-screen"),
+  results: $("#results-screen"),
+};
+
+function showScreen(name) {
+  Object.entries(screens).forEach(([key, element]) => element.classList.toggle("is-active", key === name));
+  screens[name].focus?.({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function strawberryMarkup(depth, index) {
+  const lightness = 66 - (40 * depth);
+  const seedShift = (index % 3) * 2;
+  return `<div class="strawberry" data-index="${index}" aria-label="草莓 ${index + 1}，颜色深度 ${depth.toFixed(2)}">
+    <svg viewBox="0 0 84 98" aria-hidden="true">
+      <path d="M18 23C10 12 22 5 34 17C32 5 45 2 43 18C54 6 67 11 61 23C51 20 30 20 18 23Z" fill="#3e8a5a"/>
+      <path d="M12 29C12 14 72 14 72 29C72 61 51 88 42 94C32 87 12 61 12 29Z" fill="hsl(0 75% ${lightness}%)" stroke="rgba(107,29,38,.26)" stroke-width="1.5"/>
+      <g fill="#ffd992" opacity=".92">
+        <ellipse cx="29" cy="38" rx="1.6" ry="2.5" transform="rotate(-16 29 38)"/>
+        <ellipse cx="50" cy="36" rx="1.6" ry="2.5" transform="rotate(14 50 36)"/>
+        <ellipse cx="22" cy="53" rx="1.5" ry="2.4" transform="rotate(-15 22 53)"/>
+        <ellipse cx="41" cy="53" rx="1.5" ry="2.4"/>
+        <ellipse cx="59" cy="52" rx="1.5" ry="2.4" transform="rotate(15 59 52)"/>
+        <ellipse cx="32" cy="68" rx="1.4" ry="2.3" transform="rotate(-9 32 68)"/>
+        <ellipse cx="50" cy="68" rx="1.4" ry="2.3" transform="rotate(9 50 68)"/>
+        <ellipse cx="42" cy="80" rx="1.3" ry="2.2"/>
+      </g>
+      <path d="M24 ${31 + seedShift}C32 25 52 24 62 31" fill="none" stroke="rgba(255,255,255,.17)" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>`;
+}
+
+function renderPlate(target, trial) {
+  target.innerHTML = trial.strawberries.map((depth, index) => strawberryMarkup(depth, index)).join("");
+}
+
+function renderDemo() {
+  const trial = { strawberries: [0.36, 0.45, 0.58, 0.38, 0.53, 0.41, 0.72, 0.48, 0.34, 0.61, 0.44, 0.51] };
+  renderPlate($("#demo-plate"), trial);
+}
+
+function setPhase(phase) {
+  state.phase = phase;
+  const labels = { observing: "观察中", answering: "等待判断", feedback: "本轮结果" };
+  $("#phase-pill").textContent = labels[phase] || "";
+  $("#observe-panel").hidden = phase !== "observing";
+  $("#answer-panel").hidden = !["answering", "feedback"].includes(phase);
+}
+
+function announce(message) {
+  $("#live-region").textContent = message;
+}
+
+function startExperiment() {
+  clearTimer();
+  state.trials = generateExperiment(Math.random, state.targetDPrime);
+  state.currentIndex = 0;
+  state.experimentStartedAt = new Date().toISOString();
+  state.experimentEndedAt = null;
+  state.responseLocked = false;
+  showScreen("experiment");
+  beginRound();
+  return { status: "started", totalRounds: TOTAL_ROUNDS, observationSeconds: OBSERVATION_MS / 1000, targetDPrime: state.targetDPrime };
+}
+
+function renderExperimentDifficulty(value) {
+  state.targetDPrime = clamp(Number(value), 0.5, 3);
+  $("#experiment-dprime-slider").value = String(state.targetDPrime);
+  $("#experiment-dprime-value").textContent = fixed(state.targetDPrime);
+  const explanation = state.targetDPrime < 1
+    ? "当前为高难度：坏草莓与正常草莓的颜色分布高度重叠。"
+    : state.targetDPrime < 2
+      ? "当前为较高难度：两类颜色有差异，但仍容易混淆。"
+      : state.targetDPrime < 2.75
+        ? "当前为中等难度：两类颜色具有较明显的区分度。"
+        : "当前为低难度：坏草莓通常更容易从正常草莓中区分出来。";
+  $("#difficulty-explanation").textContent = explanation;
+}
+
+function beginRound() {
+  state.responseLocked = false;
+  state.remainingMs = OBSERVATION_MS;
+  $("#round-number").textContent = String(state.currentIndex + 1);
+  $("#inline-feedback").hidden = true;
+  $("#inline-feedback").removeAttribute("data-outcome");
+  $$('[data-answer]').forEach((button) => {
+    button.disabled = false;
+    button.classList.remove("is-selected");
+  });
+  renderPlate($("#trial-plate"), state.trials[state.currentIndex]);
+  setPhase("observing");
+  state.lastTickAt = performance.now();
+  state.timerId = window.setInterval(tick, 50);
+  announce(`第 ${state.currentIndex + 1} 轮开始，请观察八秒。`);
+}
+
+function tick() {
+  if (document.hidden || state.phase !== "observing") {
+    state.lastTickAt = performance.now();
+    return;
+  }
+  const now = performance.now();
+  state.remainingMs -= now - state.lastTickAt;
+  state.lastTickAt = now;
+  if (state.remainingMs <= 0) {
+    state.remainingMs = 0;
+    clearTimer();
+    setPhase("answering");
+    $("#answer-panel").querySelector("button").focus();
+    announce("观察结束。请判断刚才是否有坏草莓。");
+    return;
+  }
+}
+
+function clearTimer() {
+  if (state.timerId !== null) window.clearInterval(state.timerId);
+  state.timerId = null;
+}
+
+function submitAnswer(userResponse) {
+  if (state.phase !== "answering" || state.responseLocked) throw new Error("当前不能提交答案");
+  if (typeof userResponse !== "boolean") throw new TypeError("答案必须是布尔值");
+  state.responseLocked = true;
+  const trial = state.trials[state.currentIndex];
+  trial.userResponse = userResponse;
+  trial.outcome = classifyOutcome(trial.signalPresent, userResponse);
+  renderFeedback(trial);
+  setPhase("feedback");
+  $("#next-button").focus();
+  announce(`本轮结果：${outcomeCopy[trial.outcome].title}。`);
+  return { round: trial.round, outcome: trial.outcome, signalPresent: trial.signalPresent };
+}
+
+const outcomeCopy = {
+  Hit: { title: "击中 Hit", message: "眼力在线！这盘确实藏着坏草莓。" },
+  Miss: { title: "漏报 Miss", message: "它悄悄躲过去了——这盘其实有坏草莓。" },
+  "False Alarm": { title: "虚报 False Alarm", message: "警报拉早啦！这盘草莓其实都很正常。" },
+  "Correct Rejection": { title: "正确拒绝 Correct Rejection", message: "判断漂亮！这盘草莓确实全部正常。" },
+};
+
+function renderFeedback(trial) {
+  const copy = outcomeCopy[trial.outcome];
+  $("#outcome-title").textContent = copy.title;
+  $("#outcome-message").textContent = copy.message;
+  $("#inline-feedback").dataset.outcome = trial.outcome;
+  $("#inline-feedback").hidden = false;
+  $$('[data-answer]').forEach((button) => {
+    button.disabled = true;
+    button.classList.toggle("is-selected", (button.dataset.answer === "true") === trial.userResponse);
+  });
+  $("#next-button").innerHTML = state.currentIndex === TOTAL_ROUNDS - 1 ? "查看实验结果 <span aria-hidden=\"true\">→</span>" : "下一轮 <span aria-hidden=\"true\">→</span>";
+}
+
+function advance() {
+  if (state.phase !== "feedback") return;
+  if (state.currentIndex < TOTAL_ROUNDS - 1) {
+    state.currentIndex += 1;
+    beginRound();
+    return;
+  }
+  state.experimentEndedAt = new Date().toISOString();
+  renderResults();
+  state.phase = "results";
+  showScreen("results");
+  announce("实验完成，结果分析已生成。");
+}
+
+function pct(value) { return `${(value * 100).toFixed(1)}%`; }
+function fixed(value) { return value.toFixed(2); }
+
+function renderResults() {
+  const metrics = calculateMetrics(state.trials);
+  $("#metric-accuracy").textContent = pct(metrics.accuracy);
+  $("#metric-hit-rate").textContent = pct(metrics.hitRate);
+  $("#metric-fa-rate").textContent = pct(metrics.falseAlarmRate);
+  $("#metric-dprime").textContent = fixed(metrics.dPrime);
+  $("#metric-miss-rate").textContent = pct(metrics.missRate);
+  $("#metric-cr-rate").textContent = pct(metrics.correctRejectionRate);
+  $("#metric-c").textContent = fixed(metrics.c);
+  $("#count-hit").textContent = metrics.H;
+  $("#count-miss").textContent = metrics.M;
+  $("#count-fa").textContent = metrics.FA;
+  $("#count-cr").textContent = metrics.CR;
+  const elapsedSeconds = Math.max(0, Math.round((new Date(state.experimentEndedAt) - new Date(state.experimentStartedAt)) / 1000));
+  $("#elapsed-time").textContent = `${Math.floor(elapsedSeconds / 60)} 分 ${elapsedSeconds % 60} 秒`;
+  $("#results-summary").textContent = buildSummary(metrics);
+  renderInterpretation(metrics);
+  renderChart(metrics);
+}
+
+function sensitivityText(dPrime) {
+  if (dPrime >= 2) return "较清晰";
+  if (dPrime >= 1) return "有一定区分度";
+  if (dPrime >= 0) return "重叠较明显";
+  return "本次样本中未形成稳定区分";
+}
+
+function buildSummary(m) {
+  const bias = Math.abs(m.c) < 0.2 ? "判断标准较为居中" : m.c > 0 ? "判断相对保守" : "判断相对宽松";
+  return `你在 20 轮中答对了 ${m.H + m.CR} 轮。根据击中与虚报的组合，本次对信号和噪声的区分${sensitivityText(m.dPrime)}，${bias}。`;
+}
+
+function renderInterpretation(m) {
+  const accuracyCopy = `本次答对 ${m.H + m.CR} / 20 轮。正确率同时受区分能力和回答倾向影响，因此不能单独说明敏感性。`;
+  let dCopy = `d′ = ${fixed(m.dPrime)}，表示本次数据中对“有信号”和“只有噪声”的区分${sensitivityText(m.dPrime)}。`;
+  if (m.hitRate >= .7 && m.falseAlarmRate >= .5) dCopy += " 击中率虽高，虚报率也偏高，这更像是经常回答“有”，不等于敏感性一定很高。";
+  if (m.hitRate <= .5 && m.falseAlarmRate <= .3) dCopy += " 击中与虚报都偏低，可能与较保守的判断标准有关。";
+  const biasCopy = Math.abs(m.c) < .2
+    ? `c = ${fixed(m.c)}，在经典模型下接近居中：本次没有明显偏向“有”或“没有”。`
+    : m.c > 0
+      ? `c = ${fixed(m.c)}，为正值：本次相对保守，倾向在更确定时才回答“有坏草莓”。`
+      : `c = ${fixed(m.c)}，为负值：本次相对宽松，较容易把可疑线索报告为“有坏草莓”。`;
+  $("#interpretation").innerHTML = [
+    ["01", "先看正确率", accuracyCopy],
+    ["02", "再看区分能力", dCopy],
+    ["03", "最后看判断倾向", biasCopy],
+  ].map(([n, title, text]) => `<div class="interpretation-block"><span>${n}</span><h4>${title}</h4><p>${text}</p></div>`).join("");
+}
+
+function renderChart(metrics) {
+  const width = 560;
+  const height = 260;
+  const left = 42;
+  const right = 18;
+  const top = 18;
+  const bottom = 42;
+  const plotW = width - left - right;
+  const plotH = height - top - bottom;
+  const xMin = -5;
+  const xMax = 5;
+  const mapX = (x) => left + ((x - xMin) / (xMax - xMin)) * plotW;
+  const mapY = (density) => top + plotH - density * plotH * 2.25;
+  const bellPath = (mean) => {
+    const pts = Array.from({ length: 100 }, (_, i) => {
+      const x = xMin + (i / 99) * (xMax - xMin);
+      const y = Math.exp(-0.5 * ((x - mean) ** 2)) / Math.sqrt(2 * Math.PI);
+      return `${i ? "L" : "M"}${mapX(x).toFixed(1)},${mapY(y).toFixed(1)}`;
+    });
+    return pts.join(" ");
+  };
+  const displayD = metrics.dPrime;
+  const criterionX = clamp((displayD / 2) + metrics.c, xMin + .4, xMax - .4);
+  const distributionsOverlap = Math.abs(displayD) < .005;
+  const signalDash = distributionsOverlap ? "stroke-dasharray=\"8 6\"" : "";
+  const distributionLabels = distributionsOverlap
+    ? `<text x="${mapX(0)}" y="${top + 50}" text-anchor="middle" fill="#43584a" font-size="11" font-weight="700">噪声与信号（d′ = 0，完全重合）</text>`
+    : `<text x="${mapX(0)}" y="${top + 50}" text-anchor="middle" fill="#2e6747" font-size="11">噪声</text>
+       <text x="${mapX(displayD)}" y="${top + 50}" text-anchor="middle" fill="#a72a3a" font-size="11">信号</text>`;
+  $("#sdt-chart").innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="正常草莓与坏草莓的主观可疑程度分布${distributionsOverlap ? "完全重合" : "有重叠"}，判断标准线位于 ${criterionX.toFixed(2)}">
+    <line x1="${left}" y1="${top + plotH}" x2="${width - right}" y2="${top + plotH}" stroke="#bdb6ac" />
+    <path d="${bellPath(0)}" fill="none" stroke="#397a54" stroke-width="4" stroke-linecap="round"/>
+    <path d="${bellPath(displayD)}" fill="none" stroke="#d83c49" stroke-width="4" stroke-linecap="round" ${signalDash}/>
+    <line x1="${mapX(criterionX)}" y1="${top + 8}" x2="${mapX(criterionX)}" y2="${top + plotH}" stroke="#e0a82f" stroke-width="3" stroke-dasharray="6 6"/>
+    <text x="${mapX(criterionX)}" y="${top}" text-anchor="middle" fill="#8a6519" font-size="12" font-weight="700">c = ${fixed(metrics.c)}</text>
+    <text x="${left + plotW / 2}" y="${height - 8}" text-anchor="middle" fill="#6b6f68" font-size="12">主观感知到的可疑程度 →</text>
+    ${distributionLabels}
+  </svg>`;
+}
+
+function density(x, mean) {
+  return Math.exp(-0.5 * ((x - mean) ** 2)) / Math.sqrt(2 * Math.PI);
+}
+
+function renderLabChart(metrics) {
+  const width = 840;
+  const height = 390;
+  const left = 66;
+  const right = 26;
+  const top = 34;
+  const bottom = 82;
+  const plotW = width - left - right;
+  const plotH = height - top - bottom;
+  const xMin = -4.2;
+  const xMax = 8.2;
+  const yMax = 0.43;
+  const mapX = (x) => left + ((x - xMin) / (xMax - xMin)) * plotW;
+  const mapY = (y) => top + plotH - (y / yMax) * plotH;
+  const sample = (mean, start = xMin, end = xMax, count = 180) => Array.from({ length: count }, (_, i) => {
+    const x = start + (i / (count - 1)) * (end - start);
+    return { x, y: density(x, mean) };
+  });
+  const linePath = (mean) => sample(mean).map((point, index) => `${index ? "L" : "M"}${mapX(point.x).toFixed(1)},${mapY(point.y).toFixed(1)}`).join(" ");
+  const areaPath = (mean, start, end) => {
+    const safeStart = clamp(start, xMin, xMax);
+    const safeEnd = clamp(end, xMin, xMax);
+    if (safeEnd <= safeStart) return "";
+    const points = sample(mean, safeStart, safeEnd, 90);
+    const curve = points.map((point) => `L${mapX(point.x).toFixed(1)},${mapY(point.y).toFixed(1)}`).join(" ");
+    return `M${mapX(safeStart).toFixed(1)},${mapY(0).toFixed(1)} ${curve} L${mapX(safeEnd).toFixed(1)},${mapY(0).toFixed(1)} Z`;
+  };
+  const criterionX = metrics.criterion;
+  const criterionPx = mapX(criterionX);
+  const modeIsSignal = labState.mode === "signal";
+  const mean = modeIsSignal ? metrics.dPrime : 0;
+  const leftColor = modeIsSignal ? "#d79b49" : "#6d9ab0";
+  const rightColor = modeIsSignal ? "#5b9c72" : "#c75a68";
+  const leftLabel = modeIsSignal ? "漏报" : "正确拒绝";
+  const rightLabel = modeIsSignal ? "击中" : "虚报";
+  const overlapDash = metrics.dPrime === 0 ? "stroke-dasharray=\"8 6\"" : "";
+
+  $("#lab-chart").innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="噪声分布均值为零，信号分布均值为 ${fixed(metrics.dPrime)}，判断标准位于 ${fixed(metrics.criterion)}">
+    <defs><clipPath id="lab-plot-clip"><rect x="${left}" y="${top}" width="${plotW}" height="${plotH}"/></clipPath></defs>
+    <g clip-path="url(#lab-plot-clip)">
+      <path d="${areaPath(mean, xMin, criterionX)}" fill="${leftColor}" fill-opacity=".27"/>
+      <path d="${areaPath(mean, criterionX, xMax)}" fill="${rightColor}" fill-opacity=".27"/>
+      <path d="${linePath(0)}" fill="none" stroke="#397a54" stroke-width="4" stroke-linecap="round"/>
+      <path d="${linePath(metrics.dPrime)}" fill="none" stroke="#d83c49" stroke-width="4" stroke-linecap="round" ${overlapDash}/>
+    </g>
+    <line x1="${left}" y1="${top + plotH}" x2="${width - right}" y2="${top + plotH}" stroke="#bdb6ac"/>
+    <line x1="${left}" y1="${top}" x2="${left}" y2="${top + plotH}" stroke="#bdb6ac"/>
+    <line x1="${criterionPx}" y1="${top}" x2="${criterionPx}" y2="${top + plotH}" stroke="#e0a82f" stroke-width="3" stroke-dasharray="7 6"/>
+    <rect x="${clamp(criterionPx - 58, left, width - right - 116)}" y="${top - 26}" width="116" height="23" rx="11.5" fill="#fff2c9"/>
+    <text x="${clamp(criterionPx, left + 58, width - right - 58)}" y="${top - 10}" text-anchor="middle" fill="#7a5a16" font-size="12" font-weight="800">criterion ${fixed(metrics.criterion)}</text>
+    <text x="${mapX(0)}" y="${mapY(yMax) + 40}" text-anchor="middle" fill="#2e6747" font-size="12" font-weight="800">噪声 μ = 0</text>
+    <text x="${mapX(metrics.dPrime)}" y="${mapY(yMax) + 59}" text-anchor="middle" fill="#a72a3a" font-size="12" font-weight="800">信号 μ = ${fixed(metrics.dPrime)}</text>
+    <text x="${(left + criterionPx) / 2}" y="${top + plotH + 28}" text-anchor="middle" fill="#556058" font-size="12" font-weight="700">回答：没有坏草莓</text>
+    <text x="${(criterionPx + width - right) / 2}" y="${top + plotH + 28}" text-anchor="middle" fill="#556058" font-size="12" font-weight="700">回答：有坏草莓</text>
+    <text x="${left + plotW / 2}" y="${height - 10}" text-anchor="middle" fill="#6b6f68" font-size="12">主观感知到的可疑程度</text>
+    <text x="18" y="${top + plotH / 2}" text-anchor="middle" fill="#6b6f68" font-size="12" transform="rotate(-90 18 ${top + plotH / 2})">相对概率密度</text>
+  </svg>`;
+  $("#lab-area-legend").innerHTML = `<i style="background:${leftColor}"></i>${leftLabel}<i style="background:${rightColor};margin-left:8px"></i>${rightLabel}`;
+}
+
+function renderLabExplanation(metrics) {
+  const dText = metrics.dPrime < 0.5
+    ? "两类分布高度重叠，仅凭可疑程度很难区分信号和噪声。"
+    : metrics.dPrime < 1.5
+      ? "两类分布存在一定差异，但仍有较多重叠。"
+      : metrics.dPrime < 2.5
+        ? "信号与噪声已经具有较明显的区分度。"
+        : "两类分布分离明显，区分信号和噪声相对容易。";
+  const cText = metrics.c < -0.2
+    ? "当前判断比较宽松：击中率通常更高，但虚报率也会提高。"
+    : metrics.c <= 0.2
+      ? "当前判断标准接近两条分布的中点。"
+      : "当前判断比较保守：虚报率通常更低，但漏报可能增加。";
+  $("#lab-dprime-insight").textContent = dText;
+  $("#lab-c-insight").textContent = cText;
+  const showWarning = metrics.hitRate >= 0.8 && metrics.falseAlarmRate >= 0.5;
+  $("#lab-warning").hidden = !showWarning;
+  $("#lab-warning").textContent = showWarning ? "高击中率不一定代表高敏感性，也可能是因为判断标准比较宽松。" : "";
+}
+
+function renderLab() {
+  const metrics = calculateLabMetrics(labState.dPrime, labState.c);
+  $("#dprime-slider").value = String(labState.dPrime);
+  $("#criterion-slider").value = String(labState.c);
+  $("#dprime-value").textContent = fixed(labState.dPrime);
+  $("#criterion-value").textContent = fixed(labState.c);
+  $("#lab-hit-rate").textContent = pct(metrics.hitRate);
+  $("#lab-fa-rate").textContent = pct(metrics.falseAlarmRate);
+  $("#lab-miss-rate").textContent = pct(metrics.missRate);
+  $("#lab-cr-rate").textContent = pct(metrics.correctRejectionRate);
+  $("#lab-accuracy").textContent = pct(metrics.accuracy);
+  $("#lab-criterion").textContent = fixed(metrics.criterion);
+  $("#lab-beta").textContent = fixed(metrics.beta);
+  $$('[data-lab-mode]').forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.labMode === labState.mode)));
+  renderLabChart(metrics);
+  renderLabExplanation(metrics);
+}
+
+function setLabValues(dPrime, c) {
+  labState.dPrime = clamp(Number(dPrime), 0, 4);
+  labState.c = clamp(Number(c), -2, 2);
+  renderLab();
+}
+
+function registerWebMCP() {
+  const context = document.modelContext;
+  if (!context?.registerTool) return;
+  const tools = [
+    {
+      name: "start_strawberry_experiment",
+      title: "开始草莓侦探实验",
+      description: "按开始页当前选择的目标 d′，重置并开始一场 20 轮草莓信号检测实验。每轮仍需等待页面完成 8 秒观察阶段。",
+      inputSchema: { type: "object", properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute: () => startExperiment(),
+    },
+    {
+      name: "answer_current_strawberry_trial",
+      title: "回答当前轮",
+      description: "在当前轮观察结束后，提交是否存在坏草莓的判断。",
+      inputSchema: { type: "object", properties: { hasBadStrawberry: { type: "boolean" } }, required: ["hasBadStrawberry"], additionalProperties: false },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute: (input) => {
+        if (!input || typeof input.hasBadStrawberry !== "boolean") throw new TypeError("hasBadStrawberry 必须是布尔值");
+        return submitAnswer(input.hasBadStrawberry);
+      },
+    },
+  ];
+  tools.forEach((tool) => {
+    try { void Promise.resolve(context.registerTool(tool)).catch(() => {}); } catch { /* optional browser API */ }
+  });
+}
+
+$("#start-button").addEventListener("click", startExperiment);
+$("#restart-button").addEventListener("click", startExperiment);
+$("#experiment-dprime-slider").addEventListener("input", (event) => renderExperimentDifficulty(event.target.value));
+$("#next-button").addEventListener("click", advance);
+$$('[data-answer]').forEach((button) => button.addEventListener("click", () => submitAnswer(button.dataset.answer === "true")));
+$("#dprime-slider").addEventListener("input", (event) => setLabValues(event.target.value, labState.c));
+$("#criterion-slider").addEventListener("input", (event) => setLabValues(labState.dPrime, event.target.value));
+$("#lab-reset").addEventListener("click", () => setLabValues(1.5, 0));
+$$('[data-lab-preset]').forEach((button) => button.addEventListener("click", () => {
+  const preset = labPresets[button.dataset.labPreset];
+  setLabValues(preset.dPrime, preset.c);
+}));
+$$('[data-lab-mode]').forEach((button) => button.addEventListener("click", () => {
+  labState.mode = button.dataset.labMode;
+  renderLab();
+}));
+document.addEventListener("visibilitychange", () => { if (!document.hidden && state.phase === "observing") state.lastTickAt = performance.now(); });
+
+renderDemo();
+renderExperimentDifficulty(DEFAULT_EXPERIMENT_DPRIME);
+renderLab();
+registerWebMCP();
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "strawberry-detective-sdt",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "草莓侦探：信号检测论互动实验",
+  "scripts": {
+    "build": "node scripts/build-standalone.mjs",
+    "test": "node test-core.mjs"
+  }
+}
+
