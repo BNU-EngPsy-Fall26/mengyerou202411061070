@@ -1,120 +1,102 @@
-[README.md](https://github.com/user-attachments/files/32838372/README.md)
-# 草莓侦探
+# 注意实验室：变化觉察 + 视觉搜索
 
-一个用于科普信号检测论的互动实验网站。参与者需要判断每盘草莓中是否存在坏草莓，完成 20 轮实验后，可以查看击中、漏报、虚报、正确拒绝、敏感性 d′ 和判断标准 c 等指标。
+> GitHub Pages 链接：（部署后填上）
 
-## 最简单的运行方法
+## 项目说明
 
-直接双击仓库根目录中的 `index.html`，网站会在默认浏览器中打开。
+本作业从 W5–W8 的经典注意实验中选了两个，做成一个可交互网页实验：
 
-这个文件已经把 HTML、CSS 和 JavaScript 合并到一起，不需要安装软件，也不需要启动服务器。草莓图形使用内嵌 SVG，因此离线打开也可以正常显示。
+1. **变化觉察任务**（基于 Rensink, O'Regan & Clark, 1997 闪烁范式变化盲）
+2. **视觉搜索任务**（基于 Treisman & Gelade, 1980 特征整合理论，加入 Posner 空间线索改进）
 
-## 使用 VS Code 运行源码
+技术栈：纯 HTML + CSS + JavaScript，计时使用 `performance.now()`。无需本地服务器，双击 `index.html` 即可运行。
 
-可编辑的源码位于 `src` 文件夹：
+## 项目码
 
-- `src/index.html`：页面结构
-- `src/styles.css`：页面样式
-- `src/app.js`：界面交互和实验流程
-- `src/core.js`：数据生成与信号检测论计算
+本项目在注意实验室 /hw2 注册的项目码：`HTE4VR`。
 
-由于源码使用了 JavaScript 模块，不建议直接双击 `src/index.html`。可以选择以下任一方式启动本地服务器。
+---
 
-### 方法一：使用 Python
+## 实验一：变化觉察（Change Blindness）
 
-在仓库根目录打开终端，运行：
+### 范式
+屏幕上 5×5 色块矩阵在两张图之间快速交替闪烁（原图 240ms → 空白 80ms → 改动图 240ms → 空白 80ms 循环），其中一个色块在两张图之间颜色不同。被试用鼠标点击发生变化的色块。
 
-```bash
-python -m http.server 8000 --directory src
-```
+### 自变量与条件
+- **基线条件（nocue）**：直接开始交替闪烁
+- **改进条件（cue）**：试次开始时，在变化位置先闪现一个黑色边框提示 300ms，然后再开始交替闪烁
 
-然后访问：
+每个条件 10 个试次，顺序随机交错。
 
-```text
-http://localhost:8000
-```
+### 因变量
+- 反应时（从试次开始到正确点击的毫秒数）
+- 是否正确（20 秒未找到记为漏检）
 
-如果 Windows 中 `python` 命令不可用，可以尝试：
+### 出处
+Rensink, R. A., O'Regan, J. K., & Clark, J. J. (1997). To see or not to see: The need for attention to perceive changes in scenes. *Psychological Science*, 8(5), 368–373.
 
-```bash
-py -m http.server 8000 --directory src
-```
+### 理论依据与预测
+改进条件基于 **外源性注意捕获理论**：一个突然出现的视觉刺激会自动将注意吸引到其所在位置，从而降低该位置的变化觉察阈值。这是对变化盲"注意必要性"假设的反向验证——如果注意被预先引导到变化位置，变化觉察应显著改善。
 
-### 方法二：使用 VS Code Live Server
+**预测**：有线索条件下的平均发现时间显著短于无线索条件（约缩短 40–60%）。
 
-1. 在 VS Code 中安装 Live Server 扩展。
-2. 打开 `src/index.html`。
-3. 点击右下角的 `Go Live`，或右键选择 `Open with Live Server`。
+---
 
-## 修改代码后重新生成可双击版本
+## 实验二：视觉搜索（Visual Search）
 
-需要安装 Node.js 18 或更高版本。
+### 范式
+屏幕中央注视点 500ms → 线索（蓝色箭头指向左/右，或中性无线索）150ms → 搜索显示出现。搜索显示为随机散布的彩色图形（圆圈/三角形，红/绿），目标始终为**红色三角形**。被试按 `F` 键（目标出现）或 `J` 键（目标不出现）。
 
-在仓库根目录运行：
+### 自变量
+- **集合大小**：6 / 12 / 18 个干扰项
+- **搜索类型**：
+  - 特征搜索（feature）：干扰项全部为绿色三角形，只需搜索"颜色"特征
+  - 联合搜索（conjunction）：干扰项包含红色圆圈、绿色三角形、绿色圆圈，需要同时整合"颜色+形状"
+- **线索有效性（改进条件）**：
+  - 有效线索（valid）：箭头指向目标所在的一侧
+  - 中性（neutral）：不出现箭头
+  - 无效线索（invalid）：箭头指向目标的对侧
 
-```bash
-npm run build
-```
+每个 (集合大小 × 搜索类型 × 线索有效性) 单元格 3 个试次，全部随机顺序呈现。
 
-脚本会读取 `src` 中的源码，并重新生成根目录的 `index.html`。请不要直接修改生成后的根目录 `index.html`，否则下次构建时会被覆盖。
+### 因变量
+- 反应时（正确试次）
+- 正确率
 
-## 运行测试
+### 出处
+- Treisman, A. M., & Gelade, G. (1980). A feature-integration theory of attention. *Cognitive Psychology*, 12(1), 97–136.
+- Posner, M. I. (1980). Orienting of attention. *Quarterly Journal of Experimental Psychology*, 32(1), 3–25.
 
-```bash
-npm test
-```
+### 理论依据与预测
+本实验首先复现 **Treisman 特征整合理论（FIT）** 的经典效应：单一特征搜索是平行加工，搜索斜率接近 0；特征联合搜索需要序列注意，斜率陡峭。
 
-测试会检查：
+在此基础上，引入 **Posner (1980) 空间注意聚光灯理论** 作为改进：自上而下的空间注意可以被预先部署到某一侧，提高该侧的视觉加工效率。
 
-- 实验始终为 20 轮，其中 10 轮信号、10 轮噪声；
-- 难度 d′ 会正确改变两类刺激的分布间距；
-- 四种判断结果的分类正确；
-- 信号检测论指标及概念实验室计算符合预期。
+**预测**：
+1. 联合搜索的 RT-集合大小斜率显著大于特征搜索（经典复现）
+2. 有效线索条件下的反应时显著短于中性条件；无效线索条件下的反应时显著长于中性条件（空间注意调节效应）
 
-## 上传到 GitHub
+---
 
-1. 在 GitHub 新建一个仓库。
-2. 将本文件夹中的全部文件上传到仓库根目录。
-3. 提交并推送到 `main` 分支。
+## 数据收数
 
-如果使用 Git 命令：
+数据通过 POST 发送到 `https://attention-lab-production.up.railway.app/api/hw2/submit`，每名被试每个实验提交一次。调试时可在 experiment 名前加 `test_` 前缀。
 
-```bash
-git init
-git add .
-git commit -m "Add Strawberry Detective experiment"
-git branch -M main
-git remote add origin 你的仓库地址
-git push -u origin main
-```
+## 本地运行
 
-## 使用 GitHub Pages 发布
+1. 用浏览器（推荐 Chrome/Edge）打开 `index.html`
+2. 输入匿名编号，开始实验
+3. 实验结束后数据自动上传
 
-1. 打开 GitHub 仓库的 `Settings`。
-2. 进入 `Pages`。
-3. 在 `Build and deployment` 中选择 `Deploy from a branch`。
-4. 选择 `main` 分支和 `/(root)` 目录，然后保存。
+## 结果与讨论
 
-GitHub Pages 会直接使用根目录的 `index.html`。发布完成后，页面中会显示公开网址。
+（收数后补充：实际效应量、与原论文对比、改进条件是否如预测生效）
 
-## 项目结构
+## AI 使用说明
 
-```text
-草莓侦探-GitHub仓库版/
-├─ index.html                 # 可直接双击，也可供 GitHub Pages 使用
-├─ README.md                  # 使用说明
-├─ package.json               # 构建和测试命令
-├─ test-core.mjs              # 核心逻辑测试
-├─ scripts/
-│  └─ build-standalone.mjs    # 将源码合并为根目录 index.html
-└─ src/
-   ├─ index.html              # 页面结构源码
-   ├─ styles.css              # 样式源码
-   ├─ app.js                  # 交互逻辑源码
-   └─ core.js                 # 实验与计算逻辑源码
-```
+AI 辅助完成了：
+- 前端代码骨架（HTML/CSS/JavaScript）
+- Canvas 刺激绘制与计时逻辑
+- 收数接口接入
 
-## 数据与隐私
-
-网站不需要后端或数据库。实验数据只保存在当前浏览器页面的内存中，刷新或关闭页面后即清除。
-
+实验设计、理论依据、预测和结果解释由本人完成。

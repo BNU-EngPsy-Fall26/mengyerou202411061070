@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注意实验室 · 变化盲 & 视觉搜索</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f7f9fc; color: #2c3e50; line-height: 1.7;
+    min-height: 100vh;
+  }
+  .screen {
+    max-width: 900px; margin: 0 auto; padding: 40px 24px;
+    display: none;
+  }
+  .screen.active { display: block; }
+  h1 { font-size: 28px; margin-bottom: 16px; color: #1a3a5c; }
+  h2 { font-size: 22px; margin: 20px 0 12px; color: #1a3a5c; }
+  p { margin-bottom: 12px; font-size: 16px; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px;
+  }
+  button {
+    background: #3478c7; color: #fff; border: none; padding: 12px 32px;
+    font-size: 16px; border-radius: 8px; cursor: pointer; margin: 8px 8px 8px 0;
+    transition: background 0.2s;
+  }
+  button:hover { background: #2a64a8; }
+  button.secondary { background: #95a5a6; }
+  button.secondary:hover { background: #7f8c8d; }
+  button:disabled { background: #bdc3c7; cursor: not-allowed; }
+  input[type="text"] {
+    padding: 10px 14px; font-size: 16px; border: 2px solid #dcdfe6;
+    border-radius: 8px; width: 240px; outline: none;
+  }
+  input[type="text"]:focus { border-color: #3478c7; }
+  canvas { background: #fff; border-radius: 8px; display: block; margin: 0 auto; }
+  .progress-bar {
+    height: 6px; background: #e8ecf1; border-radius: 3px; margin: 16px 0; overflow: hidden;
+  }
+  .progress-bar > div {
+    height: 100%; background: #3478c7; width: 0%; transition: width 0.3s;
+  }
+  .key-hint {
+    display: inline-block; background: #ecf0f1; border: 1px solid #bdc3c7;
+    border-bottom-width: 3px; padding: 2px 10px; border-radius: 4px;
+    font-family: monospace; font-weight: bold; margin: 0 4px;
+  }
+  .warning-box {
+    background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px;
+    border-radius: 4px; margin: 12px 0; font-size: 14px;
+  }
+  .success-box {
+    background: #d4edda; border-left: 4px solid #28a745; padding: 12px 16px;
+    border-radius: 4px; margin: 12px 0; font-size: 14px;
+  }
+  .exp-select {
+    display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap;
+  }
+  .exp-card {
+    flex: 1; min-width: 250px; background: #fff; border-radius: 12px;
+    padding: 24px; cursor: pointer; border: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .exp-card:hover { border-color: #3478c7; transform: translateY(-2px); }
+  .exp-card h3 { margin-bottom: 8px; color: #1a3a5c; }
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin: 16px 0;
+  }
+  .stat-card {
+    background: #f0f4f8; padding: 16px; border-radius: 8px; text-align: center;
+  }
+  .stat-card .num { font-size: 28px; font-weight: bold; color: #3478c7; }
+  .stat-card .label { font-size: 13px; color: #666; }
+  #canvas-container { text-align: center; margin: 20px 0; }
+  #rt-feedback { font-size: 18px; min-height: 28px; margin-top: 12px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<!-- 0. 首页 -->
+<div class="screen active" id="screen-welcome">
+  <div class="card">
+    <h1>注意实验室 · 两项实验</h1>
+    <p>本实验包含两个部分：<strong>变化觉察</strong> 与 <strong>视觉搜索</strong>。
+    全程约 8–12 分钟。请在安静环境中使用电脑完成，关闭手机通知。</p>
+    <p>所有数据匿名收集，不会记录你的姓名或学号。</p>
+    <button onclick="showScreen('consent')">开始</button>
+  </div>
+</div>
+
+<!-- 1. 知情同意 -->
+<div class="screen" id="screen-consent">
+  <div class="card">
+    <h1>知情同意</h1>
+    <p>本实验用于工程心理学课程作业。你需要完成两个简短的注意任务：
+    观察屏幕并作出按键/鼠标反应。你的反应时和正确率会被匿名记录。</p>
+    <p>· 数据仅用于课程作业分析，不会与你的身份关联<br>
+       · 你可以随时退出，不会有任何影响<br>
+       · 实验过程中请尽量又快又准地反应</p>
+    <label style="display:block; margin: 16px 0; font-size: 16px;">
+      <input type="checkbox" id="agree-check" onchange="document.getElementById('btn-agree').disabled = !this.checked;">
+      　我已阅读并同意参加
+    </label>
+    <button id="btn-agree" disabled onclick="showScreen('id')">我同意，继续</button>
+  </div>
+</div>
+
+<!-- 2. 被试编号 -->
+<div class="screen" id="screen-id">
+  <div class="card">
+    <h1>被试编号</h1>
+    <p>请给自己起一个匿名编号（例如 P01、test01、a123），
+    不要填写真实姓名或学号。每个参与实验的人请使用不同编号。</p>
+    <input type="text" id="participant-id" placeholder="输入编号" maxlength="20">
+    <br><br>
+    <button onclick="startExperimentSelect()">继续</button>
+  </div>
+</div>
+
+<!-- 3. 实验选择（顺序随机） -->
+<div class="screen" id="screen-select">
+  <div class="card">
+    <h1>选择第一个实验</h1>
+    <p>你将依次完成两个实验。顺序已为你随机安排。</p>
+    <div class="exp-select" id="exp-cards"></div>
+  </div>
+</div>
+
+<!-- 4. 通用指导语屏（动态填充） -->
+<div class="screen" id="screen-instructions">
+  <div class="card">
+    <h1 id="instr-title"></h1>
+    <div id="instr-body"></div>
+    <button onclick="startPractice()">开始练习</button>
+  </div>
+</div>
+
+<!-- 5. 试次屏 -->
+<div class="screen" id="screen-trial">
+  <div class="progress-bar"><div id="progress-fill"></div></div>
+  <div id="trial-info" style="text-align:center; color:#666; font-size:14px;"></div>
+  <div id="canvas-container">
+    <canvas id="main-canvas"></canvas>
+  </div>
+  <div id="rt-feedback"></div>
+</div>
+
+<!-- 6. 中间休息 -->
+<div class="screen" id="screen-break">
+  <div class="card" style="text-align:center;">
+    <h1>第一部分完成</h1>
+    <p>休息一下，准备好后点击按钮开始第二个实验。</p>
+    <button onclick="startSecondExperiment()">开始第二个实验</button>
+  </div>
+</div>
+
+<!-- 7. 结束页（上传中/成功） -->
+<div class="screen" id="screen-finish">
+  <div class="card" style="text-align:center;">
+    <h1 id="finish-title">正在提交数据…</h1>
+    <div id="finish-body"></div>
+  </div>
+</div>
+
+<!-- 8. 结果展示 -->
+<div class="screen" id="screen-results">
+  <div class="card">
+    <h1 style="text-align:center;">全体被试结果（匿名）</h1>
+    <p style="text-align:center; color:#888;">以下是目前所有被试的数据汇总，实时更新。</p>
+
+    <div style="margin: 32px 0;">
+      <h2 style="font-size:18px; border-left: 4px solid #3478c7; padding-left: 12px;">① 变化盲：线索提示效应</h2>
+      <p style="font-size:13px; color:#888; margin-left:16px;">预期：有线索条件下发现时间显著短于无线索（注意捕获效应）</p>
+      <div style="position: relative; height: 350px; max-width: 700px; margin: 16px auto;"><canvas id="chart-cb"></canvas></div>
+    </div>
+
+    <div style="margin: 40px 0;">
+      <h2 style="font-size:18px; border-left: 4px solid #2ecc71; padding-left: 12px;">② 视觉搜索：集合大小效应（复现 Treisman 1980）</h2>
+      <p style="font-size:13px; color:#888; margin-left:16px;">预期：特征搜索斜率≈0（平行加工），联合搜索斜率陡峭（系列加工）</p>
+      <div style="position: relative; height: 350px; max-width: 700px; margin: 16px auto;"><canvas id="chart-slope"></canvas></div>
+    </div>
+
+    <div style="margin: 40px 0;">
+      <h2 style="font-size:18px; border-left: 4px solid #e74c3c; padding-left: 12px;">③ 视觉搜索：空间线索效应（本实验改进）</h2>
+      <p style="font-size:13px; color:#888; margin-left:16px;">预期：有效线索 RT &lt; 中性 &lt; 无效线索（Posner 1980 聚光灯效应）</p>
+      <div style="position: relative; height: 350px; max-width: 700px; margin: 16px auto;"><canvas id="chart-vs"></canvas></div>
+    </div>
+
+    <div id="result-text" style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #eee;"></div>
+    <p style="margin-top:24px; color:#888; font-size:13px; text-align:center;">感谢参与！你可以关闭本页面。</p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * 配置区：把下面这行改成你的 6 位项目码
+ * ============================================================ */
+const PROJECT = 'HTE4VR';  // 你的项目码
+
+const LAB = 'https://attention-lab-production.up.railway.app';
+
+/* ============================================================
+ * 全局状态
+ * ============================================================ */
+const state = {
+  participant: '',
+  order: [],           // 实验顺序，如 ['change_blindness', 'visual_search']
+  currentExp: null,
+  trialsCB: [],        // 变化盲正式试次
+  trialsVS: [],        // 视觉搜索正式试次
+  practiceMode: false,
+  trialStart: 0,
+  trialIndex: 0,
+  trialTotal: 0,
+  cbSubmitted: false,
+  vsSubmitted: false,
+  cbData: null,        // 变化盲刺激
+};
+
+/* ============================================================
+ * 视图切换
+ * ============================================================ */
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+/* ============================================================
+ * 收数接口（直接复用作业模板的格式）
+ * ============================================================ */
+async function submitData(experiment, trials, condition = '') {
+  const res = await fetch(LAB + '/api/hw2/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      project: PROJECT,
+      experiment,
+      participant: state.participant,
+      condition,
+      trials,
+      meta: { ua: navigator.userAgent.slice(0, 80), w: innerWidth, h: innerHeight },
+    }),
+  });
+  const r = await res.json();
+  if (!r.ok) throw new Error(r.msg || '提交失败');
+  if (r.warnings) console.warn('上传警告：', r.warnings);
+  return r;
+}
+
+async function loadAll(experiment) {
+  const r = await (await fetch(`${LAB}/api/hw2/data?project=${PROJECT}&experiment=${experiment}`)).json();
+  return r.records || [];
+}
+
+/* ============================================================
+ * 实验流程控制
+ * ============================================================ */
+function startExperimentSelect() {
+  const id = document.getElementById('participant-id').value.trim();
+  if (!id) { alert('请输入被试编号'); return; }
+  state.participant = id;
+
+  // 随机决定实验顺序
+  state.order = Math.random() < 0.5
+    ? ['change_blindness', 'visual_search']
+    : ['visual_search', 'change_blindness'];
+
+  const container = document.getElementById('exp-cards');
+  container.innerHTML = `
+    <div class="exp-card" onclick="beginExperiment('${state.order[0]}')">
+      <h3>第一部分</h3>
+      <p>${state.order[0] === 'change_blindness' ? '变化觉察任务' : '视觉搜索任务'}</p>
+      <p style="color:#888; font-size:14px;">点击开始 →</p>
+    </div>
+    <div class="exp-card" style="opacity:0.5; cursor:default;">
+      <h3>第二部分（完成第一部分后解锁）</h3>
+      <p>${state.order[1] === 'change_blindness' ? '变化觉察任务' : '视觉搜索任务'}</p>
+    </div>`;
+  showScreen('select');
+}
+
+function beginExperiment(expName) {
+  state.currentExp = expName;
+  if (expName === 'change_blindness') showCBInstructions();
+  else showVSInstructions();
+}
+
+function startPractice() {
+  if (state.currentExp === 'change_blindness') startCBTrialBlock(true);
+  else startVSTrialBlock(true);
+}
+
+/* ============================================================
+ * 实验一：变化盲（Rensink et al., 1997）
+ * 条件：nocue（基线）/ cue（改进：变化位置先闪现线索）
+ * ============================================================ */
+const CB_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+const CB_GRID = 5;            // 5x5 = 25 格
+const CB_CELL = 70;
+const CB_GAP = 8;
+const CB_ORIGINAL_MS = 240;
+const CB_BLANK_MS = 80;
+const CB_TRIAL_TIMEOUT = 20000; // 20 秒超时
+
+function showCBInstructions() {
+  document.getElementById('instr-title').textContent = '实验一：变化觉察任务';
+  document.getElementById('instr-body').innerHTML = `
+    <p>在本任务中，你会看到屏幕上出现一个由彩色方块组成的 <strong>5×5 网格</strong>。</p>
+    <p>这个网格会在两张图之间快速地来回闪烁切换。仔细看——<strong>其中有一个方块，它的颜色在两张图之间是不一样的</strong>，其余方块在两张图中完全相同。</p>
+    <div style="background:#e8f4fd; border-left:4px solid #3478c7; padding:14px 18px; margin:16px 0; border-radius:4px;">
+      <p style="margin:0; font-size:17px;"><strong>👉 你的操作：</strong>用<strong>鼠标点击</strong>那个颜色发生了变化的方块</p>
+    </div>
+    <p>· 一旦你发现了变化，立刻用鼠标点击那个方块<br>
+       · 如果点错了，没关系，继续找下一次闪烁<br>
+       · 有些试次会在最开始时，在变化位置闪一下黑色边框来提示你；有些试次则没有任何提示</p>
+    <p>请尽量既快又准确地找到变化。如果 20 秒内都没有找到，会自动进入下一试次。</p>
+    <p style="color:#888; font-size:14px;">先进行 ${CB_PRACTICE_N} 次练习（不计入正式数据），然后进入正式实验（共 ${CB_MAIN_N * 2} 次）。</p>`;
+  showScreen('instructions');
+}
+
+function makeCBStimulus() {
+  // 生成一个 5x5 的色块矩阵，随机选一个 cell 作为变化点
+  const grid = [];
+  for (let i = 0; i < CB_GRID * CB_GRID; i++) {
+    grid.push(CB_COLORS[Math.floor(Math.random() * CB_COLORS.length)]);
+  }
+  const changeIdx = Math.floor(Math.random() * CB_GRID * CB_GRID);
+  let newColor;
+  do { newColor = CB_COLORS[Math.floor(Math.random() * CB_COLORS.length)]; }
+  while (newColor === grid[changeIdx]);
+  const modified = [...grid];
+  modified[changeIdx] = newColor;
+  return { original: grid, modified, changeIdx };
+}
+
+function startCBTrialBlock(isPractice) {
+  state.practiceMode = isPractice;
+  state.cbData = null;
+  state.trialsCB = isPractice ? [] : state.trialsCB;
+
+  // 正式 block：先做一半 cue 一半 nocue，随机交错
+  state.cbConditions = [];
+  const nPerCond = isPractice ? 2 : CB_MAIN_N;
+  for (let i = 0; i < nPerCond; i++) { state.cbConditions.push('cue'); state.cbConditions.push('nocue'); }
+  // 打乱
+  state.cbConditions.sort(() => Math.random() - 0.5);
+  state.trialTotal = state.cbConditions.length;
+  state.trialIndex = 0;
+
+  runCBTrial();
+}
+
+function runCBTrial() {
+  if (state.trialIndex >= state.trialTotal) {
+    if (state.practiceMode) {
+      // 练习结束，进入正式
+      startCBTrialBlock(false);
+      return;
+    }
+    finishCB();
+    return;
+  }
+  const cond = state.cbConditions[state.trialIndex];
+  state.cbData = { ...makeCBStimulus(), cond, startTime: performance.now(), responded: false, timedOut: false };
+
+  document.getElementById('progress-fill').style.width = (state.trialIndex / state.trialTotal * 100) + '%';
+  document.getElementById('trial-info').innerHTML =
+    `试次 ${state.trialIndex + 1} / ${state.trialTotal}${state.practiceMode ? '（练习）' : ''}　·　👆 <strong>点击颜色变化的方块</strong>`;
+  document.getElementById('rt-feedback').textContent = '';
+  showScreen('trial');
+
+  const canvas = document.getElementById('main-canvas');
+  canvas.width = CB_GRID * (CB_CELL + CB_GAP) + CB_GAP;
+  canvas.height = canvas.width;
+  canvas.onclick = (e) => handleCBClick(e, canvas);
+
+  // 如果是 cue 条件，先闪一下变化位置的边框
+  if (cond === 'cue') {
+    drawCBFrame(canvas, state.cbData.original, state.cbData.changeIdx, true);
+    setTimeout(() => startCBAlternating(canvas), 300);
+  } else {
+    startCBAlternating(canvas);
+  }
+
+  // 超时
+  state.cbTimeout = setTimeout(() => {
+    if (!state.cbData.responded) {
+      state.cbData.timedOut = true;
+      state.cbData.responded = true;
+      recordCB(null);
+    }
+  }, CB_TRIAL_TIMEOUT);
+}
+
+function startCBAlternating(canvas) {
+  // 交替显示 original -> blank -> modified -> blank
+  function showOriginal() {
+    if (!state.cbData || state.cbData.responded) return;
+    drawCBFrame(canvas, state.cbData.original, state.cbData.changeIdx, false);
+    setTimeout(showBlank, CB_ORIGINAL_MS);
+  }
+  function showBlank() {
+    if (!state.cbData || state.cbData.responded) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f7f9fc'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setTimeout(showModified, CB_BLANK_MS);
+  }
+  function showModified() {
+    if (!state.cbData || state.cbData.responded) return;
+    drawCBFrame(canvas, state.cbData.modified, state.cbData.changeIdx, false);
+    setTimeout(showBlank2, CB_ORIGINAL_MS);
+  }
+  function showBlank2() {
+    if (!state.cbData || state.cbData.responded) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f7f9fc'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setTimeout(showOriginal, CB_BLANK_MS);
+  }
+  showOriginal();
+}
+
+function drawCBFrame(canvas, grid, highlightIdx, highlightOn) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f7f9fc';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < grid.length; i++) {
+    const row = Math.floor(i / CB_GRID), col = i % CB_GRID;
+    const x = CB_GAP + col * (CB_CELL + CB_GAP);
+    const y = CB_GAP + row * (CB_CELL + CB_GAP);
+    ctx.fillStyle = grid[i];
+    ctx.fillRect(x, y, CB_CELL, CB_CELL);
+    if (highlightOn && i === highlightIdx) {
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+      ctx.strokeRect(x - 2, y - 2, CB_CELL + 4, CB_CELL + 4);
+    }
+  }
+}
+
+function handleCBClick(e, canvas) {
+  if (!state.cbData || state.cbData.responded) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  const col = Math.floor((x - CB_GAP) / (CB_CELL + CB_GAP));
+  const row = Math.floor((y - CB_GAP) / (CB_CELL + CB_GAP));
+  if (row < 0 || row >= CB_GRID || col < 0 || col >= CB_GRID) return;
+  const idx = row * CB_GRID + col;
+
+  if (idx === state.cbData.changeIdx) {
+    state.cbData.responded = true;
+    clearTimeout(state.cbTimeout);
+    recordCB(idx);
+  } else {
+    // 点错了，闪一下红色提示但不结束
+    document.getElementById('rt-feedback').textContent = '再找找～';
+    document.getElementById('rt-feedback').style.color = '#e74c3c';
+  }
+}
+
+function recordCB(clickedIdx) {
+  const d = state.cbData;
+  const rt = d.timedOut ? null : Math.round(performance.now() - d.startTime);
+  if (!state.practiceMode) {
+    state.trialsCB.push({
+      cond: d.cond,           // 'cue' | 'nocue'
+      rt: rt,
+      correct: d.timedOut ? 0 : 1,
+      change_idx: d.changeIdx,
+      timed_out: d.timedOut ? 1 : 0,
+    });
+  } else {
+    // 练习反馈
+    const fb = document.getElementById('rt-feedback');
+    fb.textContent = d.timedOut ? '时间到！' : `正确！用时 ${(rt/1000).toFixed(1)} 秒`;
+    fb.style.color = d.timedOut ? '#e74c3c' : '#2ecc71';
+  }
+  state.trialIndex++;
+  setTimeout(runCBTrial, state.practiceMode ? 800 : 600);
+}
+
+async function finishCB() {
+  document.getElementById('progress-fill').style.width = '100%';
+  showScreen('finish');
+  document.getElementById('finish-title').textContent = '正在提交变化盲数据…';
+  document.getElementById('finish-body').innerHTML = '<p>请稍候</p>';
+
+  try {
+    const r = await submitData('change_blindness', state.trialsCB);
+    state.cbSubmitted = true;
+    if (state.order[1] === 'change_blindness') {
+      // 已经做完第二个了
+      await finishAll();
+    } else {
+      showScreen('break');
+    }
+  } catch (err) {
+    document.getElementById('finish-body').innerHTML =
+      `<div class="warning-box">上传失败：${err.message}<br>请检查网络后重试。</div>
+       <button onclick="finishCB()">重试</button>`;
+  }
+}
+
+function startSecondExperiment() {
+  const next = state.order[1];
+  beginExperiment(next);
+}
+
+/* ============================================================
+ * 实验二：视觉搜索（Treisman & Gelade, 1980）
+ * 自变量：setSize(6/12/18) × searchType(feature/conjunction) × prevalence(high/low)
+ * 被试按键：F = 有目标，J = 无目标
+ * ============================================================ */
+const VS_SIZES = [6, 12, 18];
+const VS_FEATURE_COLORS = ['#e74c3c', '#2ecc71'];  // 红/绿
+const VS_TRIALS_PER_CELL = 4;  // 每个 (size × type) 单元格重复次数
+const VS_PRACTICE_N = 6;
+
+function showVSInstructions() {
+  document.getElementById('instr-title').textContent = '实验二：视觉搜索任务';
+  document.getElementById('instr-body').innerHTML = `
+    <p>在本任务中，屏幕上会随机出现若干个彩色图形（圆圈或三角形，红色或绿色）。</p>
+    <p>你的任务是：尽快判断屏幕上<strong>是否出现了目标——红色三角形</strong>。</p>
+    <p style="text-align:center; font-size:20px; margin:16px 0;">
+      目标 = <span style="color:#e74c3c; font-weight:bold;">▲ 红色三角形</span>
+    </p>
+    <p>· 如果你看到了红色三角形，按 <span class="key-hint">J</span> 键<br>
+       · 如果没有看到，按 <span class="key-hint">F</span> 键</p>
+    <p><strong>关于提示线索：</strong>有些试次在搜索图形出现之前，屏幕中央会出现一个<strong>蓝色箭头</strong>指向左边或右边。这个箭头大多数时候会提示你目标出现在哪一侧，但偶尔也会不准确。请你既参考箭头方向，又不要完全依赖它——还是要自己仔细搜索。</p>
+    <p>请尽量又快又准地按键反应。反应太快按错了比慢一点更不好。</p>
+    <p style="color:#888; font-size:14px;">先进行 ${VS_PRACTICE_N} 次练习（不计入正式数据），然后进入正式实验（约 54 次）。</p>`;
+  showScreen('instructions');
+}
+
+function makeVSTrial(setSize, searchType, targetPresent, cueValid) {
+  // 决定目标在左半区还是右半区
+  const targetSide = Math.random() < 0.5 ? 'left' : 'right';
+  // 决定线索出现在哪一侧
+  let cueSide = null;
+  if (cueValid === 'valid') cueSide = targetSide;
+  else if (cueValid === 'invalid') cueSide = targetSide === 'left' ? 'right' : 'left';
+
+  // 生成图形位置
+  const items = [];
+  const area = { w: 700, h: 450 };
+  const minDist = 50;
+  while (items.length < setSize) {
+    const x = 60 + Math.random() * (area.w - 120);
+    const y = 60 + Math.random() * (area.h - 120);
+    let ok = true;
+    for (const p of items) {
+      if (Math.hypot(p.x - x, p.y - y) < minDist) { ok = false; break; }
+    }
+    if (!ok) continue;
+    items.push({ x, y });
+  }
+
+  // 决定每个 item 的形状和颜色
+  const shapes = [];
+  for (let i = 0; i < setSize; i++) {
+    let shape, color;
+    if (searchType === 'feature') {
+      shape = 'triangle';
+      color = 'green';
+    } else {
+      shape = Math.random() < 0.5 ? 'circle' : 'triangle';
+      color = Math.random() < 0.5 ? 'red' : 'green';
+    }
+    shapes.push({ shape, color });
+  }
+
+  // 如果没有目标，确保干扰项中不出现红色三角形（避免误报）
+  if (!targetPresent) {
+    for (let i = 0; i < shapes.length; i++) {
+      if (shapes[i].shape === 'triangle' && shapes[i].color === 'red') {
+        // 改成红色圆圈或绿色三角形
+        if (Math.random() < 0.5) shapes[i] = { shape: 'circle', color: 'red' };
+        else shapes[i] = { shape: 'triangle', color: 'green' };
+      }
+    }
+  }
+
+  // 把目标（红色三角形）放到目标侧
+  if (targetPresent) {
+    let candidates = [];
+    for (let i = 0; i < items.length; i++) {
+      const isLeft = items[i].x < 400;
+      if ((targetSide === 'left' && isLeft) || (targetSide === 'right' && !isLeft)) {
+        candidates.push(i);
+      }
+    }
+    if (candidates.length === 0) candidates = [Math.floor(Math.random() * setSize)];
+    const targetPos = candidates[Math.floor(Math.random() * candidates.length)];
+    shapes[targetPos] = { shape: 'triangle', color: 'red' };
+  }
+
+  return { items, shapes, setSize, searchType, targetPresent, cueValid, cueSide, targetSide };
+}
+
+function startVSTrialBlock(isPractice) {
+  state.practiceMode = isPractice;
+  state.trialsVS = isPractice ? [] : state.trialsVS;
+
+  state.vsTrials = [];
+  if (isPractice) {
+    for (let i = 0; i < VS_PRACTICE_N; i++) {
+      state.vsTrials.push(makeVSTrial(6, 'conjunction', Math.random() < 0.5, 'neutral'));
+    }
+  } else {
+    // 3 size × 2 type × 3 cueValid × 3 次重复 = 54 试次
+    for (const size of VS_SIZES) {
+      for (const type of ['feature', 'conjunction']) {
+        for (const cue of ['valid', 'invalid', 'neutral']) {
+          for (let k = 0; k < 3; k++) {
+            state.vsTrials.push(makeVSTrial(size, type, Math.random() < 0.5, cue));
+          }
+        }
+      }
+    }
+    state.vsTrials.sort(() => Math.random() - 0.5);
+  }
+
+  state.trialTotal = state.vsTrials.length;
+  state.trialIndex = 0;
+  runVSTrial();
+}
+
+function drawFixation(canvas) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(canvas.width/2 - 10, canvas.height/2);
+  ctx.lineTo(canvas.width/2 + 10, canvas.height/2);
+  ctx.moveTo(canvas.width/2, canvas.height/2 - 10);
+  ctx.lineTo(canvas.width/2, canvas.height/2 + 10);
+  ctx.stroke();
+}
+
+function drawCue(canvas, cueSide) {
+  if (!cueSide) return;
+  drawFixation(canvas);
+  const ctx = canvas.getContext('2d');
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  // 画一个大箭头，指向线索侧
+  ctx.fillStyle = '#3478c7';
+  ctx.strokeStyle = '#3478c7';
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  if (cueSide === 'left') {
+    // 左箭头
+    ctx.beginPath();
+    ctx.moveTo(cx + 40, cy);
+    ctx.lineTo(cx - 40, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 40, cy);
+    ctx.lineTo(cx - 15, cy - 25);
+    ctx.moveTo(cx - 40, cy);
+    ctx.lineTo(cx - 15, cy + 25);
+    ctx.stroke();
+  } else {
+    // 右箭头
+    ctx.beginPath();
+    ctx.moveTo(cx - 40, cy);
+    ctx.lineTo(cx + 40, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + 40, cy);
+    ctx.lineTo(cx + 15, cy - 25);
+    ctx.moveTo(cx + 40, cy);
+    ctx.lineTo(cx + 15, cy + 25);
+    ctx.stroke();
+  }
+}
+
+function runVSTrial() {
+  if (state.trialIndex >= state.trialTotal) {
+    if (state.practiceMode) { startVSTrialBlock(false); return; }
+    finishVS();
+    return;
+  }
+  const trial = state.vsTrials[state.trialIndex];
+  document.getElementById('progress-fill').style.width = (state.trialIndex / state.trialTotal * 100) + '%';
+  document.getElementById('trial-info').innerHTML =
+    `试次 ${state.trialIndex + 1} / ${state.trialTotal}${state.practiceMode ? '（练习）' : ''}　·　看到 <span style="color:#e74c3c; font-weight:bold;">▲ 红三角</span> 按 J　没有按 F`;
+  document.getElementById('rt-feedback').textContent = '';
+  showScreen('trial');
+
+  const canvas = document.getElementById('main-canvas');
+  canvas.width = 760; canvas.height = 510;
+
+  // 阶段 1：注视点 500ms
+  drawFixation(canvas);
+  setTimeout(() => {
+    // 阶段 2：线索 300ms
+    drawCue(canvas, trial.cueSide);
+    setTimeout(() => {
+      // 阶段 3：搜索显示（开始计时）
+      drawVSTrial(canvas, trial);
+      state.vsTrialStart = performance.now();
+      state.vsTrialData = trial;
+      state.vsResponded = false;
+      document.onkeydown = handleVSKey;
+    }, 300);
+  }, 500);
+}
+
+function drawVSTrial(canvas, trial) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < trial.items.length; i++) {
+    const { x, y } = trial.items[i];
+    const { shape, color } = trial.shapes[i];
+    ctx.fillStyle = color === 'red' ? '#e74c3c' : '#2ecc71';
+    if (shape === 'circle') {
+      ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x, y - 16); ctx.lineTo(x - 15, y + 12); ctx.lineTo(x + 15, y + 12);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+}
+
+function handleVSKey(e) {
+  if (state.vsResponded || !state.vsTrialData) return;
+  if (e.key !== 'f' && e.key !== 'j' && e.key !== 'F' && e.key !== 'J') return;
+  state.vsResponded = true;
+  document.onkeydown = null;
+
+  const key = e.key.toLowerCase();
+  const isTarget = state.vsTrialData.targetPresent;
+  const respTarget = key === 'j';  // J = 有目标
+  const correct = (respTarget === isTarget) ? 1 : 0;
+  const rt = Math.round(performance.now() - state.vsTrialStart);
+
+  if (!state.practiceMode) {
+    state.trialsVS.push({
+      setSize: state.vsTrialData.setSize,
+      searchType: state.vsTrialData.searchType,
+      targetPresent: isTarget ? 1 : 0,
+      cueValid: state.vsTrialData.cueValid,
+      rt: rt,
+      correct: correct,
+    });
+  } else {
+    const fb = document.getElementById('rt-feedback');
+    fb.textContent = correct ? `正确 (${rt}ms)` : '错了～';
+    fb.style.color = correct ? '#2ecc71' : '#e74c3c';
+  }
+  state.trialIndex++;
+  setTimeout(runVSTrial, state.practiceMode ? 700 : 500);
+}
+
+async function finishVS() {
+  document.getElementById('progress-fill').style.width = '100%';
+  showScreen('finish');
+  document.getElementById('finish-title').textContent = '正在提交视觉搜索数据…';
+  document.getElementById('finish-body').innerHTML = '<p>请稍候</p>';
+
+  try {
+    const r = await submitData('visual_search', state.trialsVS);
+    state.vsSubmitted = true;
+    if (state.order[1] === 'visual_search') {
+      await finishAll();
+    } else {
+      showScreen('break');
+    }
+  } catch (err) {
+    document.getElementById('finish-body').innerHTML =
+      `<div class="warning-box">上传失败：${err.message}<br>请检查网络后重试。</div>
+       <button onclick="finishVS()">重试</button>`;
+  }
+}
+
+async function finishAll() {
+  document.getElementById('finish-title').textContent = '实验完成！';
+  document.getElementById('finish-body').innerHTML =
+    '<div class="success-box">感谢参与！你的数据已成功提交。</div><p>正在加载全体结果…</p>';
+  showScreen('results');
+  await loadAndShowResults();
+}
+
+function showBreakStats() {
+  const avg = arr => arr.length ? Math.round(arr.reduce((s, t) => s + t.rt, 0) / arr.length) : 0;
+  let html = '';
+  if (state.order[0] === 'change_blindness') {
+    const cue = state.trialsCB.filter(t => t.cond === 'cue' && t.correct === 1);
+    const nocue = state.trialsCB.filter(t => t.cond === 'nocue' && t.correct === 1);
+    html = `
+      <div class="stat-card"><div class="num">${(avg(nocue)/1000).toFixed(1)}s</div><div class="label">无线索平均发现时间</div></div>
+      <div class="stat-card"><div class="num">${(avg(cue)/1000).toFixed(1)}s</div><div class="label">有线索平均发现时间</div></div>
+      <div class="stat-card"><div class="num">${state.trialsCB.length}</div><div class="label">正式试次数</div></div>`;
+  } else {
+    const correct = state.trialsVS.filter(t => t.correct === 1);
+    const valid = state.trialsVS.filter(t => t.cueValid === 'valid' && t.correct === 1);
+    const invalid = state.trialsVS.filter(t => t.cueValid === 'invalid' && t.correct === 1);
+    html = `
+      <div class="stat-card"><div class="num">${avg(valid)}ms</div><div class="label">有效线索平均 RT</div></div>
+      <div class="stat-card"><div class="num">${avg(invalid)}ms</div><div class="label">无效线索平均 RT</div></div>
+      <div class="stat-card"><div class="num">${state.trialsVS.length}</div><div class="label">正式试次数</div></div>`;
+  }
+  document.getElementById('break-stats').innerHTML = html;
+}
+
+/* ============================================================
+ * 结果展示
+ * ============================================================ */
+async function loadAndShowResults() {
+  try {
+    const cbRecords = await loadAll('change_blindness');
+    const vsRecords = await loadAll('visual_search');
+
+    // 变化盲：cue vs nocue 平均 RT
+    const cbCue = [], cbNocue = [];
+    cbRecords.forEach(r => r.trials.forEach(t => {
+      if (t.correct === 1 && t.rt != null) {
+        if (t.cond === 'cue') cbCue.push(t.rt); else cbNocue.push(t.rt);
+      }
+    }));
+    const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+
+    new Chart(document.getElementById('chart-cb'), {
+      type: 'bar',
+      data: {
+        labels: ['无线索（基线）', '有线索（改进）'],
+        datasets: [{
+          label: '平均发现时间 (ms)',
+          data: [avg(cbNocue), avg(cbCue)],
+          backgroundColor: ['#95a5a6', '#3478c7'],
+        }]
+      },
+      options: { scales: { y: { beginAtZero: true, title: { display: true, text: '反应时 (ms)' } } } }
+    });
+
+    // 视觉搜索：集合大小 × RT 斜率（复现 Treisman）
+    const slopeData = {
+      feature: { 6: [], 12: [], 18: [] },
+      conjunction: { 6: [], 12: [], 18: [] }
+    };
+    vsRecords.forEach(r => r.trials.forEach(t => {
+      if (t.correct === 1 && t.targetPresent === 1) {
+        slopeData[t.searchType][t.setSize].push(t.rt);
+      }
+    }));
+    const avgArr = obj => Object.keys(obj).map(k => avg(obj[k]));
+
+    new Chart(document.getElementById('chart-slope'), {
+      type: 'line',
+      data: {
+        labels: ['6 项', '12 项', '18 项'],
+        datasets: [
+          { label: '特征搜索（预期：斜率≈0）', data: avgArr(slopeData.feature), borderColor: '#2ecc71', tension: 0.2 },
+          { label: '联合搜索（预期：斜率陡峭）', data: avgArr(slopeData.conjunction), borderColor: '#e74c3c', tension: 0.2 },
+        ]
+      },
+      options: { scales: { y: { beginAtZero: true, title: { display: true, text: '正确反应时 (ms)' } } } }
+    });
+
+    // 视觉搜索：cueValid 条件 × RT（改进效应）
+    const vsData = { valid: [], invalid: [], neutral: [] };
+    vsRecords.forEach(r => r.trials.forEach(t => {
+      if (t.correct === 1 && t.targetPresent === 1) {
+        vsData[t.cueValid].push(t.rt);
+      }
+    }));
+
+    new Chart(document.getElementById('chart-vs'), {
+      type: 'bar',
+      data: {
+        labels: ['有效线索（目标在线索侧）', '中性（无线索）', '无效线索（目标在对侧）'],
+        datasets: [{
+          label: '平均反应时 (ms)',
+          data: [avg(vsData.valid), avg(vsData.neutral), avg(vsData.invalid)],
+          backgroundColor: ['#2ecc71', '#95a5a6', '#e74c3c'],
+        }]
+      },
+      options: { scales: { y: { beginAtZero: true, title: { display: true, text: '正确反应时 (ms)' } } } }
+    });
+
+    document.getElementById('result-text').innerHTML = `
+      <p>共收集 ${cbRecords.length} 名被试的变化盲数据，${vsRecords.length} 名被试的视觉搜索数据。
+      以下为全体被试的匿名汇总结果。</p>`;
+  } catch (err) {
+    document.getElementById('result-text').innerHTML =
+      '<p style="color:#999;">结果加载失败（可能是网络问题），不影响你的数据已提交。</p>';
+  }
+}
+
+/* ============================================================
+ * 常量
+ * ============================================================ */
+const CB_MAIN_N = 10;  // 每个条件 10 试次
+const CB_PRACTICE_N = 4;
+</script>
+</body>
+</html>
