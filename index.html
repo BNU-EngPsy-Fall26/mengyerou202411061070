@@ -182,7 +182,7 @@
 
     <div style="margin: 40px 0;">
       <h2 style="font-size:18px; border-left: 4px solid #2ecc71; padding-left: 12px;">② 视觉搜索：集合大小效应（复现 Treisman 1980）</h2>
-      <p style="font-size:13px; color:#888; margin-left:16px;">预期：特征搜索斜率≈0（平行加工），联合搜索斜率陡峭（系列加工）</p>
+      <p style="font-size:13px; color:#888; margin-left:16px;">预期：特征搜索斜率≈0（平行加工），联合搜索斜率陡峭（系列加工）。实线＝目标出现，虚线＝目标缺失</p>
       <div style="position: relative; height: 350px; max-width: 700px; margin: 16px auto;"><canvas id="chart-slope"></canvas></div>
     </div>
 
@@ -515,8 +515,8 @@ function startSecondExperiment() {
 
 /* ============================================================
  * 实验二：视觉搜索（Treisman & Gelade, 1980）
- * 自变量：setSize(6/12/18) × searchType(feature/conjunction) × prevalence(high/low)
- * 被试按键：F = 有目标，J = 无目标
+ * 自变量：setSize(6/12/18) × searchType(feature/conjunction) × cueValid(valid/neutral/invalid)
+ * 被试按键：J = 有目标，F = 无目标
  * ============================================================ */
 const VS_SIZES = [6, 12, 18];
 const VS_FEATURE_COLORS = ['#e74c3c', '#2ecc71'];  // 红/绿
@@ -846,13 +846,17 @@ async function loadAndShowResults() {
     });
 
     // 视觉搜索：集合大小 × RT 斜率（复现 Treisman）
+    // 分开统计"目标出现"与"目标缺失"：联合搜索的代价主要出现在确认无目标的试次上
     const slopeData = {
-      feature: { 6: [], 12: [], 18: [] },
-      conjunction: { 6: [], 12: [], 18: [] }
+      feature_present: { 6: [], 12: [], 18: [] },
+      feature_absent: { 6: [], 12: [], 18: [] },
+      conjunction_present: { 6: [], 12: [], 18: [] },
+      conjunction_absent: { 6: [], 12: [], 18: [] }
     };
     vsRecords.forEach(r => r.trials.forEach(t => {
-      if (t.correct === 1 && t.targetPresent === 1) {
-        slopeData[t.searchType][t.setSize].push(t.rt);
+      if (t.correct === 1 && t.rt != null) {
+        const key = `${t.searchType}_${t.targetPresent === 1 ? 'present' : 'absent'}`;
+        if (slopeData[key]) slopeData[key][t.setSize].push(t.rt);
       }
     }));
     const avgArr = obj => Object.keys(obj).map(k => avg(obj[k]));
@@ -862,8 +866,10 @@ async function loadAndShowResults() {
       data: {
         labels: ['6 项', '12 项', '18 项'],
         datasets: [
-          { label: '特征搜索（预期：斜率≈0）', data: avgArr(slopeData.feature), borderColor: '#2ecc71', tension: 0.2 },
-          { label: '联合搜索（预期：斜率陡峭）', data: avgArr(slopeData.conjunction), borderColor: '#e74c3c', tension: 0.2 },
+          { label: '特征搜索·目标出现', data: avgArr(slopeData.feature_present), borderColor: '#2ecc71', tension: 0.2 },
+          { label: '特征搜索·目标缺失', data: avgArr(slopeData.feature_absent), borderColor: '#2ecc71', borderDash: [6, 4], tension: 0.2 },
+          { label: '联合搜索·目标出现', data: avgArr(slopeData.conjunction_present), borderColor: '#e74c3c', tension: 0.2 },
+          { label: '联合搜索·目标缺失', data: avgArr(slopeData.conjunction_absent), borderColor: '#e74c3c', borderDash: [6, 4], tension: 0.2 },
         ]
       },
       options: { scales: { y: { beginAtZero: true, title: { display: true, text: '正确反应时 (ms)' } } } }
